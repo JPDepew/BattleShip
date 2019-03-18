@@ -7,17 +7,24 @@ namespace BattleShip
         enum HitStatus { HIT, MISS, RETRY };
         static void Main(string[] args)
         {
+            HitStatus hitStatus;
+
             int boardSize = 4;
+            int turn = 0;
+            int shipIndex = 0;
+
             string[,] Player1Board;
             string[,] Player1EnemyView;
             string[,] Player2Board;
             string[,] Player2EnemyView;
+            int[] shipLengths = { 5, 4, 3, 3, 2 };
+
             bool gameIsOver = false;
-            int turn = 0;
 
             Console.WriteLine("Enter the board length: ");
             boardSize = Convert.ToInt32(Console.ReadLine());
 
+            // Setting up boards
             Player1Board = new string[boardSize, boardSize];
             Player1EnemyView = new string[boardSize, boardSize];
             Player2Board = new string[boardSize, boardSize];
@@ -29,7 +36,11 @@ namespace BattleShip
 
             Console.Clear();
 
-            HitStatus hitStatus;
+            Console.WriteLine("Player 1 ship set up.");
+            SetUpShips(Player1Board, shipLengths, boardSize);
+            Console.WriteLine("Player 2 ship set up.");
+            SetUpShips(Player2Board, shipLengths, boardSize);
+
             while (!gameIsOver)
             {
                 if (turn % 2 == 0) // Player 1
@@ -94,6 +105,22 @@ namespace BattleShip
             }
 
             Console.Read();
+        }
+
+        static void SetUpShips(string[,] playerBoard, int[] shipLengths, int boardSize)
+        {
+            int shipIndex = 0;
+
+            while (shipIndex < shipLengths.Length)
+            {
+                PrintBoard(playerBoard, boardSize);
+                // enter coordinates
+
+                Console.WriteLine("Press Enter to end turn");
+                Console.ReadKey();
+                Console.Clear();
+                shipIndex++;
+            }
         }
 
         static void PrintPlayerView(string[,] playerBoard, string[,] enemyBoard, int boardSize)
