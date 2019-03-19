@@ -11,13 +11,12 @@ namespace BattleShip
 
             int boardSize = 4;
             int turn = 0;
-            int shipIndex = 0;
 
             string[,] Player1Board;
             string[,] Player1EnemyView;
             string[,] Player2Board;
             string[,] Player2EnemyView;
-            int[] shipLengths = { 5, 4, 3, 3, 2 };
+            int[] shipLengths = { 5 };//, 4, 3, 3, 2 };
 
             bool gameIsOver = false;
 
@@ -36,9 +35,9 @@ namespace BattleShip
 
             Console.Clear();
 
-            Console.WriteLine("Player 1 ship set up.");
+            Console.WriteLine("Player 1 ship set up");
             SetUpShips(Player1Board, shipLengths, boardSize);
-            Console.WriteLine("Player 2 ship set up.");
+            Console.WriteLine("Player 2 ship set up");
             SetUpShips(Player2Board, shipLengths, boardSize);
 
             while (!gameIsOver)
@@ -111,15 +110,73 @@ namespace BattleShip
         {
             int shipIndex = 0;
 
-            while (shipIndex < shipLengths.Length)
+            while (shipIndex < shipLengths.GetLength(0))
             {
                 PrintBoard(playerBoard, boardSize);
-                // enter coordinates
 
-                Console.WriteLine("Press Enter to end turn");
-                Console.ReadKey();
+                // Getting coordinates
+                Console.WriteLine("Enter coordinates for ship of length " + shipLengths[shipIndex]);
+                Console.Write("Enter X coordinate: ");
+                int x = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Enter Y coordinate: ");
+                int y = Convert.ToInt32(Console.ReadLine());
+
+                // Getting orientation
+                Console.Write("Enter d to orient the ship downwards, or r to orient the ship to the right: ");
+                string orientation;
+                do
+                {
+                    orientation = Console.ReadLine();
+                } while (orientation != "d" && orientation != "r");
+                
+                // Checking to make sure ship doesn't go off side
+                if (orientation == "d")
+                {
+                    if (shipLengths[shipIndex] + y > playerBoard.GetLength(0))
+                    {
+                        Console.WriteLine("Ship goes off edge. Press enter to try again.");
+                        Console.ReadKey();
+                        Console.Clear();
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (shipLengths[shipIndex] + x > playerBoard.GetLength(1))
+                    {
+                        Console.WriteLine("Ship goes off edge. Press enter to try again.");
+                        Console.ReadKey();
+                        Console.Clear();
+                        continue;
+                    }
+                }
+
+                // If all is well, place the ship.
+                PlaceShip(playerBoard, shipLengths[shipIndex], x, y, orientation);
+
                 Console.Clear();
                 shipIndex++;
+            }
+
+            Console.WriteLine("Setup complete. Press Enter to continue.");
+            PrintBoard(playerBoard, boardSize);
+            Console.ReadKey();
+            Console.Clear();
+        }
+
+        static void PlaceShip(string[,] playerBoard, int shipLength, int x, int y, string orientation)
+        {
+            for (int i = 0; i < shipLength; i++)
+            {
+                playerBoard[y, x] = "[S]";
+                if (orientation == "d")
+                {
+                    y++;
+                }
+                else
+                {
+                    x++;
+                }
             }
         }
 
@@ -168,6 +225,7 @@ namespace BattleShip
             int x = Convert.ToInt32(Console.ReadLine());
             Console.Write("Enter Y coordinate: ");
             int y = Convert.ToInt32(Console.ReadLine());
+
             if (enemyBoard[y, x] == "[S]")
             {
                 enemyBoard[y, x] = "[X]";
