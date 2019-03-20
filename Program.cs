@@ -12,16 +12,21 @@ namespace BattleShip
             int boardSize = 4;
             int turn = 0;
 
+            Board Player1 = new Board();
+            Board Player1EnemyV = new Board();
+            Board Player2 = new Board();
+            Board Player2EnemyV = new Board();
+
             string[,] Player1Board;
             string[,] Player1EnemyView;
             string[,] Player2Board;
             string[,] Player2EnemyView;
-            int[] shipLengths = { 5 };//, 4, 3, 3, 2 };
+            int[] shipLengths = { 5, 4, 3, 3, 2 };
 
             bool gameIsOver = false;
 
-            Console.WriteLine("Enter the board length: ");
-            boardSize = Convert.ToInt32(Console.ReadLine());
+            //Console.WriteLine("Enter the board length: ");
+            //boardSize = Convert.ToInt32(Console.ReadLine());
 
             // Setting up boards
             Player1Board = new string[boardSize, boardSize];
@@ -36,9 +41,11 @@ namespace BattleShip
             Console.Clear();
 
             Console.WriteLine("Player 1 ship set up");
-            SetUpShips(Player1Board, shipLengths, boardSize);
+            Player1.SetUpShips();
+            //SetUpShips(Player1Board, shipLengths, boardSize);
             Console.WriteLine("Player 2 ship set up");
-            SetUpShips(Player2Board, shipLengths, boardSize);
+            Player2.SetUpShips();
+            //SetUpShips(Player2Board, shipLengths, boardSize);
 
             while (!gameIsOver)
             {
