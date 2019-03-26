@@ -7,6 +7,7 @@ namespace BattleShip
     class Board
     {
         string[,] board;
+        string[,] enemyView;
         int[] shipLengths = { 5, 4, 3, 3, 2 };
         int boardSize = 10;
         int hits;
@@ -15,13 +16,39 @@ namespace BattleShip
         public Board()
         {
             hits = 0;
-            for(int i = 0; i < shipLengths.Length; i++)
+            for (int i = 0; i < shipLengths.Length; i++)
             {
                 maxHits += shipLengths[i];
             }
             board = new string[boardSize, boardSize];
+            enemyView = new string[boardSize, boardSize];
             InitializeBoard(board);
+            InitializeBoard(enemyView);
             Console.WriteLine(maxHits);
+        }
+
+        string GetLocation(int x, int y)
+        {
+            return board[y, x];
+        }
+
+        public int GetHits()
+        {
+            return hits;
+        }
+
+        public int GetMaxHits()
+        {
+            return maxHits;
+        }
+
+        void SetLocation(int x, int y, string setTo)
+        {
+            if(setTo == "[X]")
+            {
+                hits++;
+            }
+            board[y, x] = setTo;
         }
 
         void InitializeBoard(string[,] board)
@@ -109,7 +136,7 @@ namespace BattleShip
             }
         }
 
-        void PrintBoard()
+        public void PrintBoard()
         {
             Console.Write("  ");
             for (int i = 0; i < board.GetLength(0); i++)
@@ -126,6 +153,54 @@ namespace BattleShip
                 }
                 Console.WriteLine();
             }
+        }
+
+        public void PrintEnemyView()
+        {
+            Console.Write("  ");
+            for (int i = 0; i < enemyView.GetLength(0); i++)
+            {
+                Console.Write("  " + i + " ");
+            }
+            Console.WriteLine();
+            for (int i = 0; i < enemyView.GetLength(1); i++)
+            {
+                Console.Write(i + "  ");
+                for (int j = 0; j < enemyView.GetLength(0); j++)
+                {
+                    Console.Write(enemyView[i, j] + " ");
+                }
+                Console.WriteLine();
+            }
+        }
+
+        public HitStatus Move(Board enemyBoard)
+        {
+            HitStatus hitStatus;
+            Console.Write("Enter X coordinate: ");
+            int x = Convert.ToInt32(Console.ReadLine());
+            Console.Write("Enter Y coordinate: ");
+            int y = Convert.ToInt32(Console.ReadLine());
+
+            if (enemyBoard.GetLocation(x, y) == "[S]")
+            {
+                enemyBoard.SetLocation(x, y, "[X]");
+                enemyView[y, x] = "[X]";
+                hitStatus = HitStatus.HIT;
+            }
+            else if (enemyBoard.GetLocation(x, y) == "[X]" || enemyBoard.GetLocation(x, y) == "[O]")
+            {
+                Console.WriteLine("You already went there. Press enter to try again.");
+                Console.ReadKey();
+                hitStatus = HitStatus.RETRY;
+            }
+            else
+            {
+                enemyBoard.SetLocation(x, y, "[O]");
+                enemyView[y, x] = "[O]";
+                hitStatus = HitStatus.MISS;
+            }
+            return hitStatus;
         }
     }
 }
