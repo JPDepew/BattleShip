@@ -8,7 +8,7 @@ namespace BattleShip
     {
         string[,] board;
         string[,] enemyView;
-        int[] shipLengths = { 5, 4, 3, 3, 2 };
+        int[] shipLengths = { 5, 4, 3, 3, 2 }; // add array of ships
         int boardSize = 10;
         int hits;
         int maxHits = 0;
