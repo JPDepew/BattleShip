@@ -1,0 +1,8 @@
+useful: https://www.wikihow.com/Win-at-Battleship
+1. Start by firing at the middle 5 x 5 square
+2. fire only at even or odd squares (parity)
+
+Setup:
+1. 2 spaces between each ship
+2. It's more strategic to avoid sides, but they may expect us to do that,
+so we could potentially screw with their AI.
