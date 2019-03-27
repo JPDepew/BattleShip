@@ -203,9 +203,10 @@ namespace BattleShip
 
         /// <summary>
         /// Asks the player for x and y coordinates and checks if it is a hit, miss, or if they already went there.
+        /// If a ship is sunk, then it returns SUNK
         /// </summary>
         /// <param name="enemyBoard"></param>
-        /// <returns></returns>
+        /// <returns>hitStatus - HIT, SUNK, RETRY, MISS</returns>
         public HitStatus Move(Board enemyBoard)
         {
             HitStatus hitStatus;
@@ -214,7 +215,10 @@ namespace BattleShip
             Console.Write("Enter Y coordinate: ");
             int y = Convert.ToInt32(Console.ReadLine());
 
-            // should add a check to make sure x and y are not out of bounds
+            // TODO: should add a check to make sure x and y are not out of bounds - if so return hitStatus.RETRY
+
+            // This tests the location to see what number it is. It just used number 1 - 5
+            // to make things easier. Because of the array setup, index 0 is the ship of length 5.
             switch(enemyBoard.GetLocation(x, y))
             {
                 case "[5]":
@@ -264,24 +268,6 @@ namespace BattleShip
                     hitStatus = HitStatus.MISS;
                     break;
             }
-            //if (enemyBoard.GetLocation(x, y) == "[S]") // change this
-            //{
-            //    enemyBoard.SetLocation(x, y, "[X]");
-            //    enemyView[y, x] = "[X]";
-            //    hitStatus = HitStatus.HIT;
-            //}
-            //else if (enemyBoard.GetLocation(x, y) == "[X]" || enemyBoard.GetLocation(x, y) == "[O]")
-            //{
-            //    Console.WriteLine("You already went there. Press enter to try again.");
-            //    Console.ReadKey();
-            //    hitStatus = HitStatus.RETRY;
-            //}
-            //else
-            //{
-            //    enemyBoard.SetLocation(x, y, "[O]");
-            //    enemyView[y, x] = "[O]";
-            //    hitStatus = HitStatus.MISS;
-            //}
             return hitStatus;
         }
     }
