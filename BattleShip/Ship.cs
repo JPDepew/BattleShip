@@ -5,7 +5,13 @@ using System.Text;
 namespace BattleShip
 {
 	class Ship{
-		int length;
-		int hits;
-	}
+		public int length;
+		public int hits;
+        public Tuple<int, int> coordinates;
+
+        public Ship(int _length)
+        {
+            length = _length;
+        }
+    }
 }

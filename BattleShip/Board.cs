@@ -9,6 +9,7 @@ namespace BattleShip
         string[,] board;
         string[,] enemyView;
         int[] shipLengths = { 5, 4, 3, 3, 2 }; // add array of ships
+        Ship[] ships = new Ship[5];
         int boardSize = 10;
         int hits;
         int maxHits = 0;
@@ -16,9 +17,15 @@ namespace BattleShip
         public Board()
         {
             hits = 0;
+            // initializing the number of max hits
             for (int i = 0; i < shipLengths.Length; i++)
             {
                 maxHits += shipLengths[i];
+            }
+            // initializing ships to correct lengths
+            for(int i = 0; i < ships.Length; i++)
+            {
+                ships[i] = new Ship(shipLengths[i]);
             }
             board = new string[boardSize, boardSize];
             enemyView = new string[boardSize, boardSize];
@@ -140,9 +147,11 @@ namespace BattleShip
         /// <param name="orientation">The orientation of the ship (down or right)</param>
         void PlaceShip(string[,] playerBoard, int shipLength, int x, int y, string orientation)
         {
+            string shipType = "[" + shipLength.ToString() + "]";
             for (int i = 0; i < shipLength; i++)
             {
-                playerBoard[y, x] = "[S]";
+                playerBoard[y, x] = shipType;
+                
                 if (orientation == "d")
                 {
                     y++;
@@ -207,7 +216,7 @@ namespace BattleShip
 
             // should add a check to make sure x and y are not out of bounds
 
-            if (enemyBoard.GetLocation(x, y) == "[S]")
+            if (enemyBoard.GetLocation(x, y) == "[S]") // change this
             {
                 enemyBoard.SetLocation(x, y, "[X]");
                 enemyView[y, x] = "[X]";
