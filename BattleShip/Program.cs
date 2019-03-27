@@ -48,6 +48,18 @@ namespace BattleShip
                             break;
                         }
                     }
+                    else if (hitStatus == HitStatus.SUNK)
+                    {
+                        Console.WriteLine("Player 1");
+                        PrintPlayerView(Player1);
+                        Console.WriteLine("Hit and sink!");
+                        // Total hits means game is over
+                        if (Player2.GetHits() >= Player2.GetMaxHits())
+                        {
+                            Console.WriteLine("Game Over, Player 1 wins!");
+                            break;
+                        }
+                    }
                     else
                     {
                         Console.WriteLine("Player 1");
@@ -73,6 +85,18 @@ namespace BattleShip
                         Console.WriteLine("Player 2");
                         PrintPlayerView(Player2);
                         Console.WriteLine("Hit!");
+                        // Total hits means game is over
+                        if (Player1.GetHits() >= Player1.GetMaxHits())
+                        {
+                            Console.WriteLine("Game Over, Player 2 wins!");
+                            break;
+                        }
+                    }
+                    else if (hitStatus == HitStatus.SUNK)
+                    {
+                        Console.WriteLine("Player 2");
+                        PrintPlayerView(Player2);
+                        Console.WriteLine("Hit and sink!");
                         // Total hits means game is over
                         if (Player1.GetHits() >= Player1.GetMaxHits())
                         {

@@ -4,5 +4,5 @@ using System.Text;
 
 namespace BattleShip
 {
-    enum HitStatus { HIT, MISS, RETRY };
+    enum HitStatus { HIT, MISS, RETRY, SUNK };
 }

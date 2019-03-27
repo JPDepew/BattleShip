@@ -125,7 +125,7 @@ namespace BattleShip
                 }
 
                 // If all is well, place the ship.
-                PlaceShip(board, shipLengths[shipIndex], x, y, orientation);
+                PlaceShip(board, shipIndex, x, y, orientation);
 
                 Console.Clear();
                 shipIndex++;
@@ -145,10 +145,10 @@ namespace BattleShip
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="orientation">The orientation of the ship (down or right)</param>
-        void PlaceShip(string[,] playerBoard, int shipLength, int x, int y, string orientation)
+        void PlaceShip(string[,] playerBoard, int shipIndex, int x, int y, string orientation)
         {
-            string shipType = "[" + shipLength.ToString() + "]";
-            for (int i = 0; i < shipLength; i++)
+            string shipType = "[" + (5 - shipIndex).ToString() + "]";
+            for (int i = 0; i < shipLengths[shipIndex]; i++)
             {
                 playerBoard[y, x] = shipType;
                 
@@ -215,25 +215,73 @@ namespace BattleShip
             int y = Convert.ToInt32(Console.ReadLine());
 
             // should add a check to make sure x and y are not out of bounds
+            switch(enemyBoard.GetLocation(x, y))
+            {
+                case "[5]":
+                    ships[0].hits++;
+                    hitStatus = ships[0].hits >= ships[0].length ? HitStatus.SUNK : HitStatus.HIT;
 
-            if (enemyBoard.GetLocation(x, y) == "[S]") // change this
-            {
-                enemyBoard.SetLocation(x, y, "[X]");
-                enemyView[y, x] = "[X]";
-                hitStatus = HitStatus.HIT;
+                    enemyBoard.SetLocation(x, y, "[X]");
+                    enemyView[y, x] = "[X]";
+                    break;
+                case "[4]":
+                    ships[1].hits++;
+                    hitStatus = ships[1].hits >= ships[1].length ? HitStatus.SUNK : HitStatus.HIT;
+
+                    enemyBoard.SetLocation(x, y, "[X]");
+                    enemyView[y, x] = "[X]";
+                    break;
+                case "[3]":
+                    ships[2].hits++;
+                    hitStatus = ships[2].hits >= ships[2].length ? HitStatus.SUNK : HitStatus.HIT;
+
+                    enemyBoard.SetLocation(x, y, "[X]");
+                    enemyView[y, x] = "[X]";
+                    break;
+                case "[2]":
+                    ships[3].hits++;
+                    hitStatus = ships[3].hits >= ships[3].length ? HitStatus.SUNK : HitStatus.HIT;
+
+                    enemyBoard.SetLocation(x, y, "[X]");
+                    enemyView[y, x] = "[X]";
+                    break;
+                case "[1]":
+                    ships[4].hits++;
+                    hitStatus = ships[4].hits >= ships[4].length ? HitStatus.SUNK : HitStatus.HIT;
+
+                    enemyBoard.SetLocation(x, y, "[X]");
+                    enemyView[y, x] = "[X]";
+                    break;
+                case "[X]":
+                case "[O]":
+                    Console.WriteLine("You already went there. Press enter to try again.");
+                    Console.ReadKey();
+                    hitStatus = HitStatus.RETRY;
+                    break;
+                default:
+                    enemyBoard.SetLocation(x, y, "[O]");
+                    enemyView[y, x] = "[O]";
+                    hitStatus = HitStatus.MISS;
+                    break;
             }
-            else if (enemyBoard.GetLocation(x, y) == "[X]" || enemyBoard.GetLocation(x, y) == "[O]")
-            {
-                Console.WriteLine("You already went there. Press enter to try again.");
-                Console.ReadKey();
-                hitStatus = HitStatus.RETRY;
-            }
-            else
-            {
-                enemyBoard.SetLocation(x, y, "[O]");
-                enemyView[y, x] = "[O]";
-                hitStatus = HitStatus.MISS;
-            }
+            //if (enemyBoard.GetLocation(x, y) == "[S]") // change this
+            //{
+            //    enemyBoard.SetLocation(x, y, "[X]");
+            //    enemyView[y, x] = "[X]";
+            //    hitStatus = HitStatus.HIT;
+            //}
+            //else if (enemyBoard.GetLocation(x, y) == "[X]" || enemyBoard.GetLocation(x, y) == "[O]")
+            //{
+            //    Console.WriteLine("You already went there. Press enter to try again.");
+            //    Console.ReadKey();
+            //    hitStatus = HitStatus.RETRY;
+            //}
+            //else
+            //{
+            //    enemyBoard.SetLocation(x, y, "[O]");
+            //    enemyView[y, x] = "[O]";
+            //    hitStatus = HitStatus.MISS;
+            //}
             return hitStatus;
         }
     }
