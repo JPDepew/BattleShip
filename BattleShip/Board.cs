@@ -8,7 +8,7 @@ namespace BattleShip
     {
         string[,] board;
         string[,] enemyView;
-        int[] shipLengths = { 5, 4, 3, 3, 2 }; // add array of ships
+        int[] shipLengths = { 5, 4, 3, 3, 2 };
         Ship[] ships = new Ship[5];
         int boardSize = 10;
         int hits;
@@ -147,7 +147,7 @@ namespace BattleShip
         /// <param name="orientation">The orientation of the ship (down or right)</param>
         void PlaceShip(string[,] playerBoard, int shipIndex, int x, int y, string orientation)
         {
-            string shipType = "[" + (5 - shipIndex).ToString() + "]"; // could that 5 be changed to ships.Length?
+            string shipType = "[" + (ships.Length - shipIndex).ToString() + "]"; // could that 5 be changed to ships.Length?
             for (int i = 0; i < shipLengths[shipIndex]; i++)
             {
                 playerBoard[y, x] = shipType;

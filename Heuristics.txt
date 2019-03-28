@@ -1,6 +1,9 @@
 useful: https://www.wikihow.com/Win-at-Battleship
 1. Start by firing at the middle 5 x 5 square
 2. fire only at even or odd squares (parity)
+3. Heat-map 
+4. Assign a value to each square or just attack squares around hits
+5. Is it better to destroy a ship as soon as you find it, or keep an index of that location and keep searching for other ships?
 
 Setup:
 1. 2 spaces between each ship
