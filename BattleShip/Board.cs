@@ -23,7 +23,7 @@ namespace BattleShip
                 maxHits += shipLengths[i];
             }
             // initializing ships to correct lengths
-            for(int i = 0; i < ships.Length; i++)
+            for (int i = 0; i < ships.Length; i++)
             {
                 ships[i] = new Ship(shipLengths[i]);
             }
@@ -58,7 +58,7 @@ namespace BattleShip
         /// <param name="setTo">string value to set the cell to</param>
         void SetLocation(int x, int y, string setTo)
         {
-            if(setTo == "[X]")
+            if (setTo == "[X]")
             {
                 hits++;
             }
@@ -147,11 +147,11 @@ namespace BattleShip
         /// <param name="orientation">The orientation of the ship (down or right)</param>
         void PlaceShip(string[,] playerBoard, int shipIndex, int x, int y, string orientation)
         {
-            string shipType = "[" + (5 - shipIndex).ToString() + "]";
+            string shipType = "[" + (5 - shipIndex).ToString() + "]"; // could that 5 be changed to ships.Length?
             for (int i = 0; i < shipLengths[shipIndex]; i++)
             {
                 playerBoard[y, x] = shipType;
-                
+
                 if (orientation == "d")
                 {
                     y++;
@@ -216,10 +216,17 @@ namespace BattleShip
             int y = Convert.ToInt32(Console.ReadLine());
 
             // TODO: should add a check to make sure x and y are not out of bounds - if so return hitStatus.RETRY
+            if (x > 9 || y > 9 || y < 0 || x < 0)
+            {
+                Console.WriteLine("Coordinates are outside of bounds. Enter coordinates between 0 and 9.");
+                Console.WriteLine("Press enter to continue.");
+                Console.ReadKey();
+                return HitStatus.RETRY;
+            }
 
             // This tests the location to see what number it is. It just used number 1 - 5
             // to make things easier. Because of the array setup, index 0 is the ship of length 5.
-            switch(enemyBoard.GetLocation(x, y))
+            switch (enemyBoard.GetLocation(x, y))
             {
                 case "[5]":
                     ships[0].hits++;
