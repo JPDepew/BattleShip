@@ -7,12 +7,26 @@ namespace BattleShip
         static void Main(string[] args)
         {
             // Creating boards
-            Board Player1 = new Board();
-            Board Player2 = new Board();
+            Board Player1 = new Board("Player 1");
+            Board Player2 = new Board("Player 2");
 
-            HitStatus hitStatus;
             int turn = 0;
-            bool gameIsOver = false; // not actually used now...
+            bool gameIsOver = false;
+
+            Console.WriteLine("AI player? Enter '1' for player 1, '2' for player 2, or any key for no AI.");
+            string ans = Console.ReadLine();
+            if (ans == "1")
+            {
+                Player1.AI = true;
+                Console.WriteLine("Player 1 is AI. Press any key.");
+                Console.ReadLine();
+            }
+            else if (ans == "2")
+            {
+                Player2.AI = true;
+                Console.WriteLine("Player 2 is AI. Press any key.");
+                Console.ReadLine();
+            }
 
             Console.Clear();
 
@@ -26,90 +40,100 @@ namespace BattleShip
                 // Player 1's turn
                 if (turn % 2 == 0)
                 {
-                    PrintPlayerView(Player1);
-                    do
+                    gameIsOver = Turn(Player1, Player2);
+                    if (gameIsOver)
                     {
-                        Console.Clear();
-                        Console.WriteLine("Player 1");
-                        PrintPlayerView(Player1);
-                        hitStatus = Player1.Move(Player2);
-                    } while (hitStatus == HitStatus.RETRY);
+                        break;
+                    }
+                    //PrintPlayerView(Player1);
+                    //do
+                    //{
+                    //    Console.Clear();
+                    //    Console.WriteLine("Player 1");
+                    //    PrintPlayerView(Player1);
+                    //    hitStatus = Player1.Move(Player2);
+                    //} while (hitStatus == HitStatus.RETRY);
 
-                    Console.Clear();
-                    if (hitStatus == HitStatus.HIT)
-                    {
-                        Console.WriteLine("Player 1");
-                        PrintPlayerView(Player1);
-                        Console.WriteLine("Hit!");
-                        // Total hits means game is over
-                        if (Player2.GetHits() >= Player2.GetMaxHits())
-                        {
-                            Console.WriteLine("Game Over, Player 1 wins!");
-                            break;
-                        }
-                    }
-                    else if (hitStatus == HitStatus.SUNK)
-                    {
-                        Console.WriteLine("Player 1");
-                        PrintPlayerView(Player1);
-                        Console.WriteLine("Hit and sink!");
-                        // Total hits means game is over
-                        if (Player2.GetHits() >= Player2.GetMaxHits())
-                        {
-                            Console.WriteLine("Game Over, Player 1 wins!");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Player 1");
-                        PrintPlayerView(Player1);
-                        Console.WriteLine("Miss");
-                    }
+                    //Console.Clear();
+                    //if (hitStatus == HitStatus.HIT)
+                    //{
+                    //    Console.WriteLine("Player 1");
+                    //    PrintPlayerView(Player1);
+                    //    Console.WriteLine("Hit!");
+                    //    // Total hits means game is over
+                    //    if (Player2.GetHits() >= Player2.GetMaxHits())
+                    //    {
+                    //        Console.WriteLine("Game Over, Player 1 wins!");
+                    //        break;
+                    //    }
+                    //}
+                    //else if (hitStatus == HitStatus.SUNK)
+                    //{
+                    //    Console.WriteLine("Player 1");
+                    //    PrintPlayerView(Player1);
+                    //    Console.WriteLine("Hit and sink!");
+                    //    // Total hits means game is over
+                    //    if (Player2.GetHits() >= Player2.GetMaxHits())
+                    //    {
+                    //        Console.WriteLine("Game Over, Player 1 wins!");
+                    //        break;
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("Player 1");
+                    //    PrintPlayerView(Player1);
+                    //    Console.WriteLine("Miss");
+                    //}
                 }
                 // Player 2's turn
                 else
                 {
-                    PrintPlayerView(Player2);
-                    do
+                    gameIsOver = Turn(Player2, Player1);
+                    if (gameIsOver)
                     {
-                        Console.Clear();
-                        Console.WriteLine("Player 2");
-                        PrintPlayerView(Player2);
-                        hitStatus = Player2.Move(Player1);
-                    } while (hitStatus == HitStatus.RETRY);
+                        break;
+                    }
+                    //PrintPlayerView(Player2);
+                    //do
+                    //{
+                    //    Console.Clear();
+                    //    Console.WriteLine("Player 2");
+                    //    PrintPlayerView(Player2);
+                    //    hitStatus = Player2.Move(Player1);
+                    //} while (hitStatus == HitStatus.RETRY);
 
-                    Console.Clear();
-                    if (hitStatus == HitStatus.HIT)
-                    {
-                        Console.WriteLine("Player 2");
-                        PrintPlayerView(Player2);
-                        Console.WriteLine("Hit!");
-                        // Total hits means game is over
-                        if (Player1.GetHits() >= Player1.GetMaxHits())
-                        {
-                            Console.WriteLine("Game Over, Player 2 wins!");
-                            break;
-                        }
-                    }
-                    else if (hitStatus == HitStatus.SUNK)
-                    {
-                        Console.WriteLine("Player 2");
-                        PrintPlayerView(Player2);
-                        Console.WriteLine("Hit and sink!");
-                        // Total hits means game is over
-                        if (Player1.GetHits() >= Player1.GetMaxHits())
-                        {
-                            Console.WriteLine("Game Over, Player 2 wins!");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Player 2");
-                        PrintPlayerView(Player2);
-                        Console.WriteLine("Miss");
-                    }
+                    //Console.Clear();
+                    //if (hitStatus == HitStatus.HIT)
+                    //{
+                    //    Console.WriteLine("Player 2");
+                    //    PrintPlayerView(Player2);
+                    //    Console.WriteLine("Hit!");
+                    //    // Total hits means game is over
+                    //    if (Player1.GetHits() >= Player1.GetMaxHits())
+                    //    {
+                    //        Console.WriteLine("Game Over, Player 2 wins!");
+                    //        break;
+                    //    }
+                    //}
+                    //else if (hitStatus == HitStatus.SUNK)
+                    //{
+                    //    Console.WriteLine("Player 2");
+                    //    PrintPlayerView(Player2);
+                    //    Console.WriteLine("Hit and sink!");
+                    //    // Total hits means game is over
+                    //    if (Player1.GetHits() >= Player1.GetMaxHits())
+                    //    {
+                    //        Console.WriteLine("Game Over, Player 2 wins!");
+                    //        break;
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("Player 2");
+                    //    PrintPlayerView(Player2);
+                    //    Console.WriteLine("Miss");
+                    //}
                 }
 
                 Console.WriteLine("Press Enter to end turn");
@@ -125,11 +149,63 @@ namespace BattleShip
             Console.Read();
         }
 
+        static bool Turn(Board playerA, Board playerB)
+        {
+            HitStatus hitStatus;
+            PrintPlayerView(playerA);
+            do
+            {
+                Console.Clear();
+                Console.WriteLine(playerA.name);
+                Console.WriteLine();
+                PrintPlayerView(playerA);
+                hitStatus = playerA.Move(playerB);
+            } while (hitStatus == HitStatus.RETRY);
+
+            Console.Clear();
+            if (hitStatus == HitStatus.HIT)
+            {
+                Console.WriteLine(playerA.name);
+                Console.WriteLine();
+                PrintPlayerView(playerA);
+                Console.WriteLine("Hit!");
+                // Total hits means game is over
+                if (playerB.GetHits() >= playerB.GetMaxHits())
+                {
+                    Console.WriteLine("Game Over, " + playerA.name + " wins!");
+                    return true;
+                }
+            }
+            else if (hitStatus == HitStatus.SUNK)
+            {
+                Console.WriteLine("Player 1");
+                Console.WriteLine();
+                PrintPlayerView(playerA);
+                Console.WriteLine("Hit and sink!");
+                // Total hits means game is over
+                if (playerB.GetHits() >= playerB.GetMaxHits())
+                {
+                    Console.WriteLine("Game Over, " + playerA.name + " wins!");
+                    return true;
+                }
+            }
+            else
+            {
+                Console.WriteLine(playerA.name);
+                Console.WriteLine();
+                PrintPlayerView(playerA);
+                Console.WriteLine("Miss");
+            }
+
+            return false;
+        }
+
         static void PrintPlayerView(Board playerBoard)
         {
-            Console.WriteLine("Enemy board:");
+            Console.WriteLine("   ------------- Enemy board -------------");
             playerBoard.PrintEnemyView();
-            Console.WriteLine("Your board:");
+            Console.WriteLine();
+            Console.WriteLine("   ------------- Your board -------------");
             playerBoard.PrintBoard();
         }
     }

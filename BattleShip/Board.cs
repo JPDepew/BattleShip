@@ -6,6 +6,9 @@ namespace BattleShip
 {
     class Board
     {
+        public string name;
+        public bool AI;
+
         string[,] board;
         string[,] enemyView;
         int[] shipLengths = { 5, 4, 3, 3, 2 };
@@ -14,14 +17,16 @@ namespace BattleShip
         int hits;
         int maxHits = 0;
 
-        public Board()
+        public Board(string _name)
         {
+            name = _name;
             hits = 0;
             // initializing the number of max hits
-            for (int i = 0; i < shipLengths.Length; i++)
-            {
-                maxHits += shipLengths[i];
-            }
+            maxHits = 3;
+            //for (int i = 0; i < shipLengths.Length; i++)
+            //{
+            //    maxHits += shipLengths[i];
+            //}
             // initializing ships to correct lengths
             for (int i = 0; i < ships.Length; i++)
             {
@@ -87,12 +92,23 @@ namespace BattleShip
             {
                 PrintBoard();
 
+                string _x;
+                string _y;
+                int x;
+                int y;
                 // Getting coordinates
                 Console.WriteLine("Enter coordinates for ship of length " + shipLengths[shipIndex]);
                 Console.Write("Enter X coordinate: ");
-                int x = Convert.ToInt32(Console.ReadLine());
+                do
+                {
+                    _x = Console.ReadLine();
+                } while (!int.TryParse(_x, out x));
+
                 Console.Write("Enter Y coordinate: ");
-                int y = Convert.ToInt32(Console.ReadLine());
+                do
+                {
+                    _y = Console.ReadLine();
+                } while (!int.TryParse(_y, out y));
 
                 // Getting orientation
                 Console.Write("Enter d to orient the ship downwards, or r to orient the ship to the right: ");
@@ -199,6 +215,11 @@ namespace BattleShip
                 }
                 Console.WriteLine();
             }
+        }
+
+        public void AIMove()
+        {
+
         }
 
         /// <summary>
