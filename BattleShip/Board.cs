@@ -7,8 +7,12 @@ namespace BattleShip
     class Board
     {
         public string name;
+
+        // AI stuff
         public bool AI;
         public bool oddStartingParity = true;
+        private List<Tuple<int, int>> hitCoordinates;
+        Random rnd;
 
         string[,] board;
         string[,] enemyView;
@@ -17,13 +21,11 @@ namespace BattleShip
         int boardSize = 10;
         int hits;
         int maxHits = 0;
-        Random rnd;
 
         public Board(string _name)
         {
             name = _name;
             hits = 0;
-            rnd = new Random();
             // initializing the number of max hits
             for (int i = 0; i < shipLengths.Length; i++)
             {
@@ -36,6 +38,11 @@ namespace BattleShip
             }
             board = new string[boardSize, boardSize];
             enemyView = new string[boardSize, boardSize];
+
+            // AI stuff
+            rnd = new Random();
+            hitCoordinates = new List<Tuple<int, int>>();
+
             InitializeBoard(board);
             InitializeBoard(enemyView);
         }
@@ -218,11 +225,16 @@ namespace BattleShip
             }
         }
 
-        public bool AIMove(Board enemyBoard)
+        /// <summary>
+        /// AI makes a move. Currently it is just random with parity.
+        /// </summary>
+        /// <param name="enemyBoard"></param>
+        /// <returns>Whether the game is over or not</returns>
+        bool AIMove(Board enemyBoard)
         {
             int yPos = rnd.Next(0, 10);
             int xPos;
-            if(yPos % 2 == 0) // odd numbers
+            if (yPos % 2 == 0) // odd numbers
             {
                 xPos = rnd.Next(0, 5) * 2 + 1;
             }
@@ -233,7 +245,10 @@ namespace BattleShip
 
             HitStatus hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
 
-
+            if(hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
+            {
+                hitCoordinates.Add(new Tuple<int, int>(xPos, yPos));
+            }
 
             return false;
         }
@@ -244,7 +259,7 @@ namespace BattleShip
         /// </summary>
         /// <param name="enemyBoard"></param>
         /// <returns>hitStatus - HIT, SUNK, RETRY, MISS</returns>
-        public HitStatus Move(Board enemyBoard)
+        HitStatus PlayerMove(Board enemyBoard)
         {
             HitStatus hitStatus;
             Console.Write("Enter X coordinate: ");
@@ -263,7 +278,7 @@ namespace BattleShip
             // This tests the location to see what number it is. It just used number 1 - 5
             // to make things easier. Because of the array setup, index 0 is the ship of length 5.
             hitStatus = MoveOnBoard(enemyBoard, x, y);
-            
+
             //switch (enemyBoard.GetLocation(x, y))
             //{
             //    case "[5]":
@@ -371,6 +386,83 @@ namespace BattleShip
                     break;
             }
             return hitStatus;
+        }
+
+        public bool TakeTurn(Board playerB)
+        {
+            // AI makes a move
+            if (AI)
+            {
+                return AIMove(playerB);
+            }
+            // Player makes a move
+            else
+            {
+                HitStatus hitStatus;
+                PrintPlayerView();
+                do
+                {
+                    Console.Clear();
+                    Console.WriteLine(name);
+                    Console.WriteLine();
+                    PrintPlayerView();
+                    hitStatus = PlayerMove(playerB);
+                } while (hitStatus == HitStatus.RETRY);
+
+                Console.Clear();
+                if (hitStatus == HitStatus.HIT)
+                {
+                    Console.WriteLine(name);
+                    Console.WriteLine();
+                    PrintPlayerView();
+                    Console.WriteLine("Hit!");
+                    // Total hits means game is over
+                    if (playerB.GetHits() >= playerB.GetMaxHits())
+                    {
+                        Console.WriteLine("Game Over, " + name + " wins!");
+                        return true;
+                    }
+                }
+                else if (hitStatus == HitStatus.SUNK)
+                {
+                    Console.WriteLine("Player 1");
+                    Console.WriteLine();
+                    PrintPlayerView();
+                    Console.WriteLine("Hit and sink!");
+                    // Total hits means game is over
+                    if (playerB.GetHits() >= playerB.GetMaxHits())
+                    {
+                        Console.WriteLine("Game Over, " + name + " wins!");
+                        return true;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(name);
+                    Console.WriteLine();
+                    PrintPlayerView();
+                    Console.WriteLine("Miss");
+                }
+
+                Console.WriteLine("Press Enter to end turn");
+                Console.ReadKey();
+                Console.Clear();
+                Console.WriteLine("Press Enter to start turn");
+                Console.WriteLine();
+                Console.ReadKey();
+                Console.Clear();
+
+                return false;
+            }
+        }
+
+        void PrintPlayerView()
+        {
+            Console.WriteLine("   ------------- Enemy board -------------");
+            PrintEnemyView();
+            Console.WriteLine();
+            Console.WriteLine("   ------------- Your board -------------");
+            PrintBoard();
         }
     }
 }
