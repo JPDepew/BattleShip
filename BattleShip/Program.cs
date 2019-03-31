@@ -40,7 +40,7 @@ namespace BattleShip
                 // Player 1's turn
                 if (turn % 2 == 0)
                 {
-                    gameIsOver = Turn(Player1, Player2);
+                    gameIsOver = Player1.AI ? Player1.AIMove(Player2) : Turn(Player1, Player2);
                     if (gameIsOver)
                     {
                         break;
@@ -89,7 +89,7 @@ namespace BattleShip
                 // Player 2's turn
                 else
                 {
-                    gameIsOver = Turn(Player2, Player1);
+                    gameIsOver = Player2.AI ? Player2.AIMove(Player1) : Turn(Player2, Player1);
                     if (gameIsOver)
                     {
                         break;

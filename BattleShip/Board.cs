@@ -8,6 +8,7 @@ namespace BattleShip
     {
         public string name;
         public bool AI;
+        public bool oddStartingParity = true;
 
         string[,] board;
         string[,] enemyView;
@@ -16,17 +17,18 @@ namespace BattleShip
         int boardSize = 10;
         int hits;
         int maxHits = 0;
+        Random rnd;
 
         public Board(string _name)
         {
             name = _name;
             hits = 0;
+            rnd = new Random();
             // initializing the number of max hits
-            maxHits = 3;
-            //for (int i = 0; i < shipLengths.Length; i++)
-            //{
-            //    maxHits += shipLengths[i];
-            //}
+            for (int i = 0; i < shipLengths.Length; i++)
+            {
+                maxHits += shipLengths[i];
+            }
             // initializing ships to correct lengths
             for (int i = 0; i < ships.Length; i++)
             {
@@ -36,7 +38,6 @@ namespace BattleShip
             enemyView = new string[boardSize, boardSize];
             InitializeBoard(board);
             InitializeBoard(enemyView);
-            Console.WriteLine(maxHits);
         }
 
         string GetLocation(int x, int y)
@@ -217,9 +218,24 @@ namespace BattleShip
             }
         }
 
-        public void AIMove()
+        public bool AIMove(Board enemyBoard)
         {
+            int yPos = rnd.Next(0, 10);
+            int xPos;
+            if(yPos % 2 == 0) // odd numbers
+            {
+                xPos = rnd.Next(0, 5) * 2 + 1;
+            }
+            else // even numbers
+            {
+                xPos = rnd.Next(0, 5) * 2;
+            }
 
+            HitStatus hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
+
+
+
+            return false;
         }
 
         /// <summary>
@@ -236,7 +252,6 @@ namespace BattleShip
             Console.Write("Enter Y coordinate: ");
             int y = Convert.ToInt32(Console.ReadLine());
 
-            // TODO: should add a check to make sure x and y are not out of bounds - if so return hitStatus.RETRY
             if (x > 9 || y > 9 || y < 0 || x < 0)
             {
                 Console.WriteLine("Coordinates are outside of bounds. Enter coordinates between 0 and 9.");
@@ -245,6 +260,65 @@ namespace BattleShip
                 return HitStatus.RETRY;
             }
 
+            // This tests the location to see what number it is. It just used number 1 - 5
+            // to make things easier. Because of the array setup, index 0 is the ship of length 5.
+            hitStatus = MoveOnBoard(enemyBoard, x, y);
+            
+            //switch (enemyBoard.GetLocation(x, y))
+            //{
+            //    case "[5]":
+            //        ships[0].hits++;
+            //        hitStatus = ships[0].hits >= ships[0].length ? HitStatus.SUNK : HitStatus.HIT;
+
+            //        enemyBoard.SetLocation(x, y, "[X]");
+            //        enemyView[y, x] = "[X]";
+            //        break;
+            //    case "[4]":
+            //        ships[1].hits++;
+            //        hitStatus = ships[1].hits >= ships[1].length ? HitStatus.SUNK : HitStatus.HIT;
+
+            //        enemyBoard.SetLocation(x, y, "[X]");
+            //        enemyView[y, x] = "[X]";
+            //        break;
+            //    case "[3]":
+            //        ships[2].hits++;
+            //        hitStatus = ships[2].hits >= ships[2].length ? HitStatus.SUNK : HitStatus.HIT;
+
+            //        enemyBoard.SetLocation(x, y, "[X]");
+            //        enemyView[y, x] = "[X]";
+            //        break;
+            //    case "[2]":
+            //        ships[3].hits++;
+            //        hitStatus = ships[3].hits >= ships[3].length ? HitStatus.SUNK : HitStatus.HIT;
+
+            //        enemyBoard.SetLocation(x, y, "[X]");
+            //        enemyView[y, x] = "[X]";
+            //        break;
+            //    case "[1]":
+            //        ships[4].hits++;
+            //        hitStatus = ships[4].hits >= ships[4].length ? HitStatus.SUNK : HitStatus.HIT;
+
+            //        enemyBoard.SetLocation(x, y, "[X]");
+            //        enemyView[y, x] = "[X]";
+            //        break;
+            //    case "[X]":
+            //    case "[O]":
+            //        Console.WriteLine("You already went there. Press enter to try again.");
+            //        Console.ReadKey();
+            //        hitStatus = HitStatus.RETRY;
+            //        break;
+            //    default:
+            //        enemyBoard.SetLocation(x, y, "[O]");
+            //        enemyView[y, x] = "[O]";
+            //        hitStatus = HitStatus.MISS;
+            //        break;
+            //}
+            return hitStatus;
+        }
+
+        private HitStatus MoveOnBoard(Board enemyBoard, int x, int y)
+        {
+            HitStatus hitStatus;
             // This tests the location to see what number it is. It just used number 1 - 5
             // to make things easier. Because of the array setup, index 0 is the ship of length 5.
             switch (enemyBoard.GetLocation(x, y))
