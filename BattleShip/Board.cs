@@ -232,18 +232,24 @@ namespace BattleShip
         /// <returns>Whether the game is over or not</returns>
         bool AIMove(Board enemyBoard)
         {
-            int yPos = rnd.Next(0, 10);
+            int yPos = 0;
             int xPos;
-            if (yPos % 2 == 0) // odd numbers
-            {
-                xPos = rnd.Next(0, 5) * 2 + 1;
-            }
-            else // even numbers
-            {
-                xPos = rnd.Next(0, 5) * 2;
-            }
+            HitStatus hitStatus;
 
-            HitStatus hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
+            do
+            {
+                yPos = rnd.Next(0, 10);
+                if (yPos % 2 == 0) // odd numbers
+                {
+                    xPos = rnd.Next(0, 5) * 2 + 1;
+                }
+                else // even numbers
+                {
+                    xPos = rnd.Next(0, 5) * 2;
+                }
+
+                hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
+            } while (hitStatus == HitStatus.RETRY);
 
             if(hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
             {
