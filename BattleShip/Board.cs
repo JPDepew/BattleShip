@@ -99,8 +99,6 @@ namespace BattleShip
                 int ind = 0;
                 while (ind < shipLengths.GetLength(0))
                 {
-                    string _x;
-                    string _y;
                     int x;
                     int y;
 
@@ -119,20 +117,26 @@ namespace BattleShip
                         orientation = "r";
                     }
 
-                    if (orientation == "d")
+                    if (!VerifyShipPlacement(x, y, orientation, ind))
                     {
-                        if (shipLengths[ind] + y > board.GetLength(0))
-                        {
-                            continue;
-                        }
+                        // error in ship placement
+                        continue;
                     }
-                    else
-                    {
-                        if (shipLengths[ind] + x > board.GetLength(1))
-                        {
-                            continue;
-                        }
-                    }
+
+                    //if (orientation == "d")
+                    //{
+                    //    if (shipLengths[ind] + y > board.GetLength(0))
+                    //    {
+                    //        continue;
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    if (shipLengths[ind] + x > board.GetLength(1))
+                    //    {
+                    //        continue;
+                    //    }
+                    //}
 
                     // If all is well, place the ship.
                     PlaceShip(board, ind, x, y, orientation);
@@ -176,25 +180,33 @@ namespace BattleShip
                     } while (orientation != "d" && orientation != "r");
 
                     // Checking to make sure ship doesn't go off side
-                    if (orientation == "d")
+                    //if (orientation == "d")
+                    //{
+                    //    if (shipLengths[shipIndex] + y > board.GetLength(0))
+                    //    {
+                    //        Console.WriteLine("Ship goes off edge. Press enter to try again.");
+                    //        Console.ReadKey();
+                    //        Console.Clear();
+                    //        continue;
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    if (shipLengths[shipIndex] + x > board.GetLength(1))
+                    //    {
+                    //        Console.WriteLine("Ship goes off edge. Press enter to try again.");
+                    //        Console.ReadKey();
+                    //        Console.Clear();
+                    //        continue;
+                    //    }
+                    //}
+
+                    if (!VerifyShipPlacement(x,y,orientation,shipIndex))
                     {
-                        if (shipLengths[shipIndex] + y > board.GetLength(0))
-                        {
-                            Console.WriteLine("Ship goes off edge. Press enter to try again.");
-                            Console.ReadKey();
-                            Console.Clear();
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        if (shipLengths[shipIndex] + x > board.GetLength(1))
-                        {
-                            Console.WriteLine("Ship goes off edge. Press enter to try again.");
-                            Console.ReadKey();
-                            Console.Clear();
-                            continue;
-                        }
+                        Console.WriteLine("Error in ship placement. Press enter to try again.");
+                        Console.ReadKey();
+                        Console.Clear();
+                        continue;
                     }
 
                     // If all is well, place the ship.
@@ -209,6 +221,37 @@ namespace BattleShip
                 Console.ReadKey();
                 Console.Clear();
             }
+        }
+
+        bool VerifyShipPlacement(int x, int y, string orientation, int shipIndex)
+        {
+            if (orientation == "d")
+            {
+                if (shipLengths[shipIndex] + y > board.GetLength(0))
+                {
+                    return false;
+                }
+                for (int i = y; i < shipLengths[shipIndex] + y; i++)
+                {
+                    if (board[i, x] != "[ ]")
+                        return false;
+                }
+            }
+            else
+            {
+                if (shipLengths[shipIndex] + x > board.GetLength(1))
+                {
+                    return false;
+                }
+                for (int i = x; i < shipLengths[shipIndex] + x; i++)
+                {
+                    if (board[y, i] != "[ ]")
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true; // passed all tests
         }
 
         /// <summary>
@@ -301,7 +344,7 @@ namespace BattleShip
                 hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
             } while (hitStatus == HitStatus.RETRY);
 
-            if(hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
+            if (hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
             {
                 hitCoordinates.Add(new Tuple<int, int>(xPos, yPos));
             }

@@ -4,6 +4,10 @@ useful: https://www.wikihow.com/Win-at-Battleship
 3. Heat-map 
 4. Assign a value to each square or just attack squares around hits
 5. Is it better to destroy a ship as soon as you find it, or keep an index of that location and keep searching for other ships?
+6. (Possible) When you have hit a ship, instead of immediately circling it, attack 2 to the right, 2 to the left, 2 up, and 2 down. This way your
+shots are still only even or odd, which means missed shots are not wasted. However, this should only be done if the correct number or ships are left.
+7. (Possible) This could be similar to a heat map. The AI could divide the board into 4 quadrants and see which has the most open spots. It would then take a random shot
+at the quadrant with the most open spots. This is essentially saying that a more open quadrant is more likely to have a ship. This would only be useful later in the game.
 
 Setup:
 1. 2 spaces between each ship
