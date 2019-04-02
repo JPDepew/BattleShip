@@ -16,6 +16,7 @@ namespace BattleShip
 
         string[,] board;
         string[,] enemyView;
+        float[,] heatMap;
         int[] shipLengths = { 5, 4, 3, 3, 2 };
         Ship[] ships = new Ship[5];
         int boardSize = 10;
@@ -38,6 +39,7 @@ namespace BattleShip
             }
             board = new string[boardSize, boardSize];
             enemyView = new string[boardSize, boardSize];
+            heatMap = new float[boardSize, boardSize];
 
             // AI stuff
             rnd = new Random();
@@ -60,6 +62,54 @@ namespace BattleShip
         public int GetMaxHits()
         {
             return maxHits;
+        }
+
+        void GenerateHeatMap()
+        {
+            for (int i = 0; i < heatMap.GetLength(1); i++) // x
+            {
+                for (int j = 0; j < heatMap.GetLength(0); j++) // y
+                {
+                    heatMap[i, j] = CreateValueForCell(i, j);
+                }
+            }
+        }
+
+        float CreateValueForCell(int x, int y)
+        {
+            // start at cell, move up, d, l, r, and see how far you can move in each direction.
+            // The farther you move before hitting something, the better the value for the cell.
+            // If a cell is X then increase value
+            float sum = 0;
+            for (int _x = x; _x < enemyView.GetLength(1) && enemyView[y, _x] == "[ ]"; _x++)
+            {
+                sum += 0.0025f;
+            }
+            for (int _x = x; _x >= 0 && enemyView[y, _x] == "[ ]"; _x--)
+            {
+                sum += 0.0025f;
+            }
+            for (int _y = y; _y < enemyView.GetLength(0) && enemyView[_y, x] == "[ ]"; _y++)
+            {
+                sum += 0.0025f;
+            }
+            for (int _y = y; _y >= 0 && enemyView[_y, x] == "[ ]"; _y--)
+            {
+                sum += 0.0025f;
+            }
+            return 0;
+        }
+
+        void PrintHeatMap()
+        {
+            for (int i = 0; i < heatMap.GetLength(1); i++) // x
+            {
+                for (int j = 0; j < heatMap.GetLength(0); j++) // y
+                {
+                    Console.Write(heatMap[i, j] + " ");
+                }
+                Console.WriteLine();
+            }
         }
 
         /// <summary>
@@ -201,7 +251,7 @@ namespace BattleShip
                     //    }
                     //}
 
-                    if (!VerifyShipPlacement(x,y,orientation,shipIndex))
+                    if (!VerifyShipPlacement(x, y, orientation, shipIndex))
                     {
                         Console.WriteLine("Error in ship placement. Press enter to try again.");
                         Console.ReadKey();
@@ -328,6 +378,9 @@ namespace BattleShip
             int yPos = 0;
             int xPos;
             HitStatus hitStatus;
+
+            PrintHeatMap();
+            Console.ReadLine();
 
             do
             {
