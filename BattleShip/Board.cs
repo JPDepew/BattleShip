@@ -70,43 +70,127 @@ namespace BattleShip
             {
                 for (int j = 0; j < heatMap.GetLength(0); j++) // y
                 {
-                    heatMap[i, j] = CreateValueForCell(i, j);
+                    heatMap[j, i] = CreateValueForCell(i, j);
                 }
             }
         }
 
+        /// <summary>
+        /// Very basic heat map. There are a few problems that we'll have to fix in the future. For example, once a ship has sunk, we 
+        /// will have to mark those spots as sunk, or it will want to keep fireing around them.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns>Value for cell</returns>
         float CreateValueForCell(int x, int y)
         {
-            // start at cell, move up, d, l, r, and see how far you can move in each direction.
-            // The farther you move before hitting something, the better the value for the cell.
-            // If a cell is X then increase value
+            // need to add: keeping in mind what the max ship length left is
             float sum = 0;
-            for (int _x = x; _x < enemyView.GetLength(1) && enemyView[y, _x] == "[ ]"; _x++)
+            float addValue = 0.0025f;
+            float subtractValue = 0.0005f;
+            float decrement = 0.0001f;
+            float bonus = 0.01f;
+
+            if (enemyView[y, x] == "[O]")
             {
-                sum += 0.0025f;
+                return sum;
             }
-            for (int _x = x; _x >= 0 && enemyView[y, _x] == "[ ]"; _x--)
+            if (enemyView[y, x] == "[X]")
             {
-                sum += 0.0025f;
+                return 1;
             }
-            for (int _y = y; _y < enemyView.GetLength(0) && enemyView[_y, x] == "[ ]"; _y++)
+            for (int _x = x; _x < enemyView.GetLength(1); _x++)
             {
-                sum += 0.0025f;
+                if (enemyView[y, _x] == "[X]")
+                {
+                    sum += (addValue + bonus);
+                }
+                else if(enemyView[y, _x] == "[O]")
+                {
+                    sum -= subtractValue;
+                    break;
+                }
+                else
+                {
+                    sum += addValue;
+                }
+                subtractValue -= decrement;
+                addValue -= decrement;
             }
-            for (int _y = y; _y >= 0 && enemyView[_y, x] == "[ ]"; _y--)
+
+            // reinitialize
+            addValue = 0.0025f;
+            subtractValue = 0.0005f;
+            for (int _x = x; _x >= 0 && enemyView[y, _x] != "[O]"; _x--)
             {
-                sum += 0.0025f;
+                if (enemyView[y, _x] == "[X]")
+                {
+                    sum += (addValue + bonus);
+                }
+                else if (enemyView[y, _x] == "[O]")
+                {
+                    sum -= subtractValue;
+                    break;
+                }
+                else
+                {
+                    sum += addValue;
+                }
+                subtractValue -= decrement;
+                addValue -= decrement;
             }
-            return 0;
+
+            addValue = 0.0025f;
+            subtractValue = 0.0005f;
+            for (int _y = y; _y < enemyView.GetLength(0) && enemyView[_y, x] != "[O]"; _y++)
+            {
+                if (enemyView[_y, x] == "[X]")
+                {
+                    sum += (addValue + bonus);
+                }
+                else if (enemyView[_y, x] == "[O]")
+                {
+                    sum -= subtractValue;
+                    break;
+                }
+                else
+                {
+                    sum += addValue;
+                }
+                subtractValue -= decrement;
+                addValue -= decrement;
+            }
+
+            addValue = 0.0025f;
+            subtractValue = 0.0005f;
+            for (int _y = y; _y >= 0 && enemyView[_y, x] != "[O]"; _y--)
+            {
+                if (enemyView[_y, x] == "[X]")
+                {
+                    sum += (addValue + bonus);
+                }
+                else if (enemyView[_y, x] == "[O]")
+                {
+                    sum -= subtractValue;
+                    break;
+                }
+                else
+                {
+                    sum += addValue;
+                }
+                subtractValue -= decrement;
+                addValue -= decrement;
+            }
+            return sum;
         }
 
         void PrintHeatMap()
         {
-            for (int i = 0; i < heatMap.GetLength(1); i++) // x
+            for (int i = 0; i < heatMap.GetLength(1); i++) // y
             {
-                for (int j = 0; j < heatMap.GetLength(0); j++) // y
+                for (int j = 0; j < heatMap.GetLength(0); j++) // x
                 {
-                    Console.Write(heatMap[i, j] + " ");
+                    Console.Write(String.Format("{0:0.000}", heatMap[i, j]) + " ");
                 }
                 Console.WriteLine();
             }
@@ -379,6 +463,7 @@ namespace BattleShip
             int xPos;
             HitStatus hitStatus;
 
+            GenerateHeatMap();
             PrintHeatMap();
             Console.ReadLine();
 
