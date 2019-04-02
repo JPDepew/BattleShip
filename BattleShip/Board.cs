@@ -94,71 +94,121 @@ namespace BattleShip
         /// </summary>
         public void SetUpShips()
         {
-            int shipIndex = 0;
-
-            while (shipIndex < shipLengths.GetLength(0))
+            if (AI)
             {
-                PrintBoard();
-
-                string _x;
-                string _y;
-                int x;
-                int y;
-                // Getting coordinates
-                Console.WriteLine("Enter coordinates for ship of length " + shipLengths[shipIndex]);
-                Console.Write("Enter X coordinate: ");
-                do
+                int ind = 0;
+                while (ind < shipLengths.GetLength(0))
                 {
-                    _x = Console.ReadLine();
-                } while (!int.TryParse(_x, out x));
+                    string _x;
+                    string _y;
+                    int x;
+                    int y;
 
-                Console.Write("Enter Y coordinate: ");
-                do
-                {
-                    _y = Console.ReadLine();
-                } while (!int.TryParse(_y, out y));
+                    Random rand = new Random();
+                    y = rand.Next(0, board.GetLength(0));
+                    x = rand.Next(0, board.GetLength(1));
 
-                // Getting orientation
-                Console.Write("Enter d to orient the ship downwards, or r to orient the ship to the right: ");
-                string orientation;
-                do
-                {
-                    orientation = Console.ReadLine();
-                } while (orientation != "d" && orientation != "r");
-
-                // Checking to make sure ship doesn't go off side
-                if (orientation == "d")
-                {
-                    if (shipLengths[shipIndex] + y > board.GetLength(0))
+                    int chance = rand.Next(0, 10);
+                    string orientation;
+                    if (chance >= 5)
                     {
-                        Console.WriteLine("Ship goes off edge. Press enter to try again.");
-                        Console.ReadKey();
-                        Console.Clear();
-                        continue;
+                        orientation = "d";
                     }
-                }
-                else
-                {
-                    if (shipLengths[shipIndex] + x > board.GetLength(1))
+                    else
                     {
-                        Console.WriteLine("Ship goes off edge. Press enter to try again.");
-                        Console.ReadKey();
-                        Console.Clear();
-                        continue;
+                        orientation = "r";
                     }
+
+                    if (orientation == "d")
+                    {
+                        if (shipLengths[ind] + y > board.GetLength(0))
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (shipLengths[ind] + x > board.GetLength(1))
+                        {
+                            continue;
+                        }
+                    }
+
+                    // If all is well, place the ship.
+                    PlaceShip(board, ind, x, y, orientation);
+
+                    Console.Clear();
+                    ind++;
                 }
-
-                // If all is well, place the ship.
-                PlaceShip(board, shipIndex, x, y, orientation);
-
-                Console.Clear();
-                shipIndex++;
             }
+            else
+            {
+                int shipIndex = 0;
 
-            Console.WriteLine("Setup complete. Press Enter to continue.");
-            PrintBoard();
-            Console.ReadKey();
-            Console.Clear();
+                while (shipIndex < shipLengths.GetLength(0))
+                {
+                    PrintBoard();
+
+                    string _x;
+                    string _y;
+                    int x;
+                    int y;
+                    // Getting coordinates
+                    Console.WriteLine("Enter coordinates for ship of length " + shipLengths[shipIndex]);
+                    Console.Write("Enter X coordinate: ");
+                    do
+                    {
+                        _x = Console.ReadLine();
+                    } while (!int.TryParse(_x, out x));
+
+                    Console.Write("Enter Y coordinate: ");
+                    do
+                    {
+                        _y = Console.ReadLine();
+                    } while (!int.TryParse(_y, out y));
+
+                    // Getting orientation
+                    Console.Write("Enter d to orient the ship downwards, or r to orient the ship to the right: ");
+                    string orientation;
+                    do
+                    {
+                        orientation = Console.ReadLine();
+                    } while (orientation != "d" && orientation != "r");
+
+                    // Checking to make sure ship doesn't go off side
+                    if (orientation == "d")
+                    {
+                        if (shipLengths[shipIndex] + y > board.GetLength(0))
+                        {
+                            Console.WriteLine("Ship goes off edge. Press enter to try again.");
+                            Console.ReadKey();
+                            Console.Clear();
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (shipLengths[shipIndex] + x > board.GetLength(1))
+                        {
+                            Console.WriteLine("Ship goes off edge. Press enter to try again.");
+                            Console.ReadKey();
+                            Console.Clear();
+                            continue;
+                        }
+                    }
+
+                    // If all is well, place the ship.
+                    PlaceShip(board, shipIndex, x, y, orientation);
+
+                    Console.Clear();
+                    shipIndex++;
+                }
+
+                Console.WriteLine("Setup complete. Press Enter to continue.");
+                PrintBoard();
+                Console.ReadKey();
+                Console.Clear();
+            }
         }
 
         /// <summary>
@@ -269,9 +319,18 @@ namespace BattleShip
         {
             HitStatus hitStatus;
             Console.Write("Enter X coordinate: ");
-            int x = Convert.ToInt32(Console.ReadLine());
+            string str_x = Console.ReadLine();
             Console.Write("Enter Y coordinate: ");
-            int y = Convert.ToInt32(Console.ReadLine());
+            string str_y = Console.ReadLine();
+
+            int x;
+            int y;
+
+            if (!Int32.TryParse(str_x, out x))
+                return HitStatus.RETRY;
+            else if (!Int32.TryParse(str_y, out y))
+                return HitStatus.RETRY;
+
 
             if (x > 9 || y > 9 || y < 0 || x < 0)
             {
@@ -381,9 +440,14 @@ namespace BattleShip
                     break;
                 case "[X]":
                 case "[O]":
-                    Console.WriteLine("You already went there. Press enter to try again.");
-                    Console.ReadKey();
-                    hitStatus = HitStatus.RETRY;
+                    if (AI)
+                        hitStatus = HitStatus.RETRY;
+                    else
+                    {
+                        Console.WriteLine("You already went there. Press enter to try again.");
+                        Console.ReadKey();
+                        hitStatus = HitStatus.RETRY;
+                    }
                     break;
                 default:
                     enemyBoard.SetLocation(x, y, "[O]");
