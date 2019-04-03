@@ -13,7 +13,7 @@ namespace BattleShip
             int turn = 0;
             bool gameIsOver = false;
 
-            Console.WriteLine("AI player? Enter '1' for player 1, '2' for player 2, or any key for no AI.");
+            Console.WriteLine("AI player? Enter '1' for player 1, '2' for player 2, 'b' for both, or any key for no AI.");
             string ans = Console.ReadLine();
             if (ans == "1")
             {
@@ -25,6 +25,13 @@ namespace BattleShip
             {
                 Player2.AI = true;
                 Console.WriteLine("Player 2 is AI. Press any key.");
+                Console.ReadLine();
+            }
+            else if (ans == "b")
+            {
+                Player1.AI = true;
+                Player2.AI = true;
+                Console.WriteLine("Both are AI. Press any key.");
                 Console.ReadLine();
             }
 

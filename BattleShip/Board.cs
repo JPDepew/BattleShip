@@ -11,7 +11,8 @@ namespace BattleShip
         // AI stuff
         public bool AI;
         public bool oddStartingParity = true;
-        private List<Tuple<int, int>> hitCoordinates;
+        private Tuple<int, int> currentHitCoordinates;
+        private List<Tuple<int, int>> possibleHitCoordinates;
         Random rnd;
 
         string[,] board;
@@ -19,6 +20,8 @@ namespace BattleShip
         float[,] heatMap;
         int[] shipLengths = { 5, 4, 3, 3, 2 };
         Ship[] ships = new Ship[5];
+
+        bool huntMode = false;
         int boardSize = 10;
         int hits;
         int maxHits = 0;
@@ -43,7 +46,7 @@ namespace BattleShip
 
             // AI stuff
             rnd = new Random();
-            hitCoordinates = new List<Tuple<int, int>>();
+            possibleHitCoordinates = new List<Tuple<int, int>>();
 
             InitializeBoard(board);
             InitializeBoard(enemyView);
@@ -97,7 +100,7 @@ namespace BattleShip
             }
             if (enemyView[y, x] == "[X]")
             {
-                return 1;
+                return 0;
             }
             for (int _x = x; _x < enemyView.GetLength(1); _x++)
             {
@@ -105,7 +108,7 @@ namespace BattleShip
                 {
                     sum += (addValue + bonus);
                 }
-                else if(enemyView[y, _x] == "[O]")
+                else if (enemyView[y, _x] == "[O]")
                 {
                     sum -= subtractValue;
                     break;
@@ -467,27 +470,76 @@ namespace BattleShip
             PrintHeatMap();
             Console.ReadLine();
 
-            do
+            if (!huntMode)
             {
-                yPos = rnd.Next(0, 10);
-                if (yPos % 2 == 0) // odd numbers
+                do
                 {
-                    xPos = rnd.Next(0, 5) * 2 + 1;
+                    yPos = rnd.Next(0, 10);
+                    if (yPos % 2 == 0) // odd numbers
+                    {
+                        xPos = rnd.Next(0, 5) * 2 + 1;
+                    }
+                    else // even numbers
+                    {
+                        xPos = rnd.Next(0, 5) * 2;
+                    }
+
+                    hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
+                } while (hitStatus == HitStatus.RETRY);
+                if (hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
+                {
+                    huntMode = true;
+                    currentHitCoordinates = new Tuple<int, int>(yPos, xPos);
+                    AddPossibleHitCoordinates(new Tuple<int, int>(yPos, xPos));
                 }
-                else // even numbers
+            }
+            // hunt mode
+            else
+            {
+                Tuple<int, int> location = ChooseFromPossibleHitCoordinates();
+                hitStatus = MoveOnBoard(enemyBoard, location.Item1, location.Item2);
+
+                if(hitStatus == HitStatus.HIT)
                 {
-                    xPos = rnd.Next(0, 5) * 2;
+
+                }
+                else if(hitStatus == HitStatus.MISS)
+                {
+
+                }
+                else if(hitStatus == HitStatus.SUNK)
+                {
+                    huntMode = false;
+                    possibleHitCoordinates.Clear();
                 }
 
-                hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
-            } while (hitStatus == HitStatus.RETRY);
-
-            if (hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
-            {
-                hitCoordinates.Add(new Tuple<int, int>(xPos, yPos));
+                if (possibleHitCoordinates.Count == 0)
+                {
+                    huntMode = false;
+                }
             }
 
+
             return false;
+        }
+
+        Tuple<int, int> ChooseFromPossibleHitCoordinates()
+        {
+            Tuple<int, int> highestCoordinates = new Tuple<int, int>(0, 0);
+            float highestValue = 0;
+
+            foreach (Tuple<int, int> t in possibleHitCoordinates)
+            {
+                if (heatMap[t.Item1, t.Item2] > highestValue)
+                {
+                    highestValue = heatMap[t.Item1, t.Item2];
+                    highestCoordinates = t;
+                }
+            }
+            possibleHitCoordinates.Remove(highestCoordinates);
+            //AddPossibleHitCoordinates(highestCoordinates);
+
+            return highestCoordinates;
         }
 
         /// <summary>
@@ -524,56 +576,6 @@ namespace BattleShip
             // This tests the location to see what number it is. It just used number 1 - 5
             // to make things easier. Because of the array setup, index 0 is the ship of length 5.
             hitStatus = MoveOnBoard(enemyBoard, x, y);
-
-            //switch (enemyBoard.GetLocation(x, y))
-            //{
-            //    case "[5]":
-            //        ships[0].hits++;
-            //        hitStatus = ships[0].hits >= ships[0].length ? HitStatus.SUNK : HitStatus.HIT;
-
-            //        enemyBoard.SetLocation(x, y, "[X]");
-            //        enemyView[y, x] = "[X]";
-            //        break;
-            //    case "[4]":
-            //        ships[1].hits++;
-            //        hitStatus = ships[1].hits >= ships[1].length ? HitStatus.SUNK : HitStatus.HIT;
-
-            //        enemyBoard.SetLocation(x, y, "[X]");
-            //        enemyView[y, x] = "[X]";
-            //        break;
-            //    case "[3]":
-            //        ships[2].hits++;
-            //        hitStatus = ships[2].hits >= ships[2].length ? HitStatus.SUNK : HitStatus.HIT;
-
-            //        enemyBoard.SetLocation(x, y, "[X]");
-            //        enemyView[y, x] = "[X]";
-            //        break;
-            //    case "[2]":
-            //        ships[3].hits++;
-            //        hitStatus = ships[3].hits >= ships[3].length ? HitStatus.SUNK : HitStatus.HIT;
-
-            //        enemyBoard.SetLocation(x, y, "[X]");
-            //        enemyView[y, x] = "[X]";
-            //        break;
-            //    case "[1]":
-            //        ships[4].hits++;
-            //        hitStatus = ships[4].hits >= ships[4].length ? HitStatus.SUNK : HitStatus.HIT;
-
-            //        enemyBoard.SetLocation(x, y, "[X]");
-            //        enemyView[y, x] = "[X]";
-            //        break;
-            //    case "[X]":
-            //    case "[O]":
-            //        Console.WriteLine("You already went there. Press enter to try again.");
-            //        Console.ReadKey();
-            //        hitStatus = HitStatus.RETRY;
-            //        break;
-            //    default:
-            //        enemyBoard.SetLocation(x, y, "[O]");
-            //        enemyView[y, x] = "[O]";
-            //        hitStatus = HitStatus.MISS;
-            //        break;
-            //}
             return hitStatus;
         }
 
@@ -705,6 +707,35 @@ namespace BattleShip
 
                 return false;
             }
+        }
+
+        void AddPossibleHitCoordinates(Tuple<int, int> hitCoordinates)
+        {
+            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 - 1)))
+            {
+                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 - 1));
+            }
+            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 + 1)))
+            {
+                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 + 1));
+            }
+            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2 - 1, hitCoordinates.Item1)))
+            {
+                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2 - 1, hitCoordinates.Item1));
+            }
+            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2 + 1, hitCoordinates.Item1)))
+            {
+                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2 + 1, hitCoordinates.Item1));
+            }
+        }
+
+        bool TestCoordinates(Tuple<int, int> hitCoordinate)
+        {
+            if(hitCoordinate.Item1 < 0 || hitCoordinate.Item1 > 9 || hitCoordinate.Item2 < 0 || hitCoordinate.Item2 > 9)
+            {
+                return false;
+            }
+            return heatMap[hitCoordinate.Item1, hitCoordinate.Item2] > 0;
         }
 
         void PrintPlayerView()
