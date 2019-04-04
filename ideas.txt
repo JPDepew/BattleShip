@@ -6,7 +6,7 @@ http://www.datagenetics.com/blog/december32011/
 
 http://www.cs.huji.ac.il/~ai/projects/2015/Battleships/
 
-General Strategy:
+General Strategy (starting out):
 https://www.sciencedirect.com/science/article/pii/0895717788900751
 
 Ideas for placement:
