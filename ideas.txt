@@ -1,0 +1,15 @@
+Very helpful paper: 
+This includes info on both placement of ships and firing
+http://www.cores2.com/files/FinalResearchPaper.pdf
+
+http://www.datagenetics.com/blog/december32011/
+
+http://www.cs.huji.ac.il/~ai/projects/2015/Battleships/
+
+General Strategy:
+https://www.sciencedirect.com/science/article/pii/0895717788900751
+
+Ideas for placement:
+Currently looking into monte carlo algorithm
+Need to clarify how many games we will run this for, will determine the type
+of machine learning possible (value iteration, SARSA, etc.)
