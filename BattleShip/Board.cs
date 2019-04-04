@@ -4,6 +4,18 @@ using System.Text;
 
 namespace BattleShip
 {
+    class Coordinate
+    {
+        public int x;
+        public int y;
+
+        public Coordinate(int row, int col)
+        {
+            x = row;
+            y = col;
+        }
+    }
+
     class Board
     {
         public string name;
@@ -11,8 +23,9 @@ namespace BattleShip
         // AI stuff
         public bool AI;
         public bool oddStartingParity = true;
-        private Tuple<int, int> currentHitCoordinates;
-        private List<Tuple<int, int>> possibleHitCoordinates;
+        private Coordinate currentHitCoordinates;
+        private List<Coordinate> possibleHitCoordinates;
+        private List<Coordinate> currentShipCoordinates;
         Random rnd;
 
         string[,] board;
@@ -21,7 +34,7 @@ namespace BattleShip
         int[] shipLengths = { 5, 4, 3, 3, 2 };
         Ship[] ships = new Ship[5];
 
-        bool huntMode = false;
+        SearchMode searchMode;
         int boardSize = 10;
         int hits;
         int maxHits = 0;
@@ -46,7 +59,9 @@ namespace BattleShip
 
             // AI stuff
             rnd = new Random();
-            possibleHitCoordinates = new List<Tuple<int, int>>();
+            possibleHitCoordinates = new List<Coordinate>();
+            currentShipCoordinates = new List<Coordinate>();
+            searchMode = SearchMode.SEARCH;
 
             InitializeBoard(board);
             InitializeBoard(enemyView);
@@ -100,7 +115,7 @@ namespace BattleShip
             }
             if (enemyView[y, x] == "[X]")
             {
-                return 0;
+                return -1;
             }
             for (int _x = x; _x < enemyView.GetLength(1); _x++)
             {
@@ -470,7 +485,7 @@ namespace BattleShip
             PrintHeatMap();
             Console.ReadLine();
 
-            if (!huntMode)
+            if (searchMode == SearchMode.SEARCH)
             {
                 do
                 {
@@ -488,58 +503,216 @@ namespace BattleShip
                 } while (hitStatus == HitStatus.RETRY);
                 if (hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
                 {
-                    huntMode = true;
-                    currentHitCoordinates = new Tuple<int, int>(yPos, xPos);
-                    AddPossibleHitCoordinates(new Tuple<int, int>(yPos, xPos));
+                    searchMode = SearchMode.HUNT;
+                    currentHitCoordinates = new Coordinate(xPos, yPos);
+                    currentShipCoordinates.Add(currentHitCoordinates);
+                    AddSurroundingPossibleHitCoordinates(currentHitCoordinates);
                 }
             }
-            // hunt mode
-            else
+            else if (searchMode == SearchMode.HUNT)
             {
-                Tuple<int, int> location = ChooseFromPossibleHitCoordinates();
-                hitStatus = MoveOnBoard(enemyBoard, location.Item1, location.Item2);
+                Coordinate location = ChooseFromPossibleHitCoordinates();
+                hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
 
-                if(hitStatus == HitStatus.HIT)
+                if (hitStatus == HitStatus.HIT)
                 {
-
+                    possibleHitCoordinates.Clear();
+                    currentShipCoordinates.Add(location);
+                    AddNarrowedPossibleHitCoordinates(location);
+                    searchMode = SearchMode.NARROWEDHUNT;
                 }
-                else if(hitStatus == HitStatus.MISS)
+                else if (hitStatus == HitStatus.SUNK)
                 {
-
-                }
-                else if(hitStatus == HitStatus.SUNK)
-                {
-                    huntMode = false;
+                    searchMode = SearchMode.SEARCH;
                     possibleHitCoordinates.Clear();
                 }
 
                 if (possibleHitCoordinates.Count == 0)
                 {
-                    huntMode = false;
+                    searchMode = SearchMode.SEARCH;
                 }
             }
+            else if (searchMode == SearchMode.NARROWEDHUNT)
+            {
+                Coordinate location = ChooseFromPossibleHitCoordinates();
+                hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
 
+                if (hitStatus == HitStatus.HIT)
+                {
+                    currentShipCoordinates.Add(location);
+                    AddNarrowedPossibleHitCoordinates(location);
+                }
+                else if (hitStatus == HitStatus.SUNK)
+                {
+                    // in here we need to check the distance between location and currentHitCoord.
+                    // That way we can see how large the ship was and remove it from possible ships.
+                    // we also need to keep track of the ship lengths still out there and integrate that into the heatmap.
+                    // ALSO - when a ship is sunk, it needs to be marked in a way on the board so that the heatmap will 
+                    // recongnize that it's not as likely that a ship will be near those cells.
+                    currentShipCoordinates.Add(location);
+                    Console.WriteLine("Length: " + currentShipCoordinates.Count);
+                    Console.ReadKey();
+                    // clearing out the lists
+                    currentShipCoordinates.Clear();
+                    possibleHitCoordinates.Clear();
+                    searchMode = SearchMode.SEARCH;
+                }
+
+                // this means that no ship was sunk, but we're out of possible hit spots...
+                // I think that the best thing is to hunt again from the original coordinate
+                if (possibleHitCoordinates.Count == 0)
+                {
+                    searchMode = SearchMode.HUNT;
+                }
+            }
 
             return false;
         }
 
-        Tuple<int, int> ChooseFromPossibleHitCoordinates()
+        /// <summary>
+        /// Gives you the highest coordinate to choose from and then removes it from the list (possibleHitCoordinates)
+        /// </summary>
+        /// <returns></returns>
+        Coordinate ChooseFromPossibleHitCoordinates()
         {
-            Tuple<int, int> highestCoordinates = new Tuple<int, int>(0, 0);
+            Coordinate highestCoordinates = new Coordinate(0, 0);
             float highestValue = 0;
 
-            foreach (Tuple<int, int> t in possibleHitCoordinates)
+            foreach (Coordinate t in possibleHitCoordinates)
             {
-                if (heatMap[t.Item1, t.Item2] > highestValue)
+                if (heatMap[t.x, t.y] > highestValue)
                 {
-                    highestValue = heatMap[t.Item1, t.Item2];
+                    highestValue = heatMap[t.x, t.y];
                     highestCoordinates = t;
                 }
             }
             possibleHitCoordinates.Remove(highestCoordinates);
-            //AddPossibleHitCoordinates(highestCoordinates);
 
             return highestCoordinates;
+        }
+
+        void AddSurroundingPossibleHitCoordinates(Coordinate hitCoordinates)
+        {
+            if (TestCoordinates(new Coordinate(hitCoordinates.x, hitCoordinates.y - 1)))
+            {
+                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x, hitCoordinates.y - 1));
+            }
+            if (TestCoordinates(new Coordinate(hitCoordinates.x, hitCoordinates.y + 1)))
+            {
+                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x, hitCoordinates.y + 1));
+            }
+            if (TestCoordinates(new Coordinate(hitCoordinates.x - 1, hitCoordinates.y)))
+            {
+                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x - 1, hitCoordinates.y));
+            }
+            if (TestCoordinates(new Coordinate(hitCoordinates.x + 1, hitCoordinates.y)))
+            {
+                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x + 1, hitCoordinates.y));
+            }
+        }
+
+        /// <summary>
+        /// On a second hit, this function adds possible locations for the next hits (either horizontal or vertical)
+        /// </summary>
+        /// <param name="newHitCoordinate">The new hit</param>
+        void AddNarrowedPossibleHitCoordinates(Coordinate newHitCoordinate)
+        {
+            // Up or down
+            if (currentHitCoordinates.x == newHitCoordinate.x)
+            {
+                if (currentHitCoordinates.y > newHitCoordinate.y)
+                {
+                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y + 1);
+                    if (heatMap[coordinate.x, coordinate.y] == -1)
+                    {
+                        coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y + 2);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+
+                    coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y - 1);
+                    if (heatMap[coordinate.x, coordinate.y] == -1) // this checks to see if it is a hit. If it is, you should pass the hit, not ignore it
+                    {
+                        coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y - 2);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+                }
+                else
+                {
+                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y - 1);
+                    if (heatMap[coordinate.x, coordinate.y] == -1)
+                    {
+                        coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y - 1);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+
+                    coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y + 1);
+                    if (heatMap[coordinate.x, coordinate.y] == -1)
+                    {
+                        coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y + 2);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+                }
+            }
+            // left or right
+            else if (currentHitCoordinates.y == newHitCoordinate.y)
+            {
+                if (currentHitCoordinates.x > newHitCoordinate.x)
+                {
+                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x + 1, currentHitCoordinates.y);
+                    if (heatMap[coordinate.x, coordinate.y] == -1)
+                    {
+                        coordinate = new Coordinate(currentHitCoordinates.x + 2, currentHitCoordinates.y);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+
+                    coordinate = new Coordinate(newHitCoordinate.x - 1, newHitCoordinate.y);
+                    if (heatMap[coordinate.x, coordinate.y] == -1)
+                    {
+                        coordinate = new Coordinate(newHitCoordinate.x - 2, newHitCoordinate.y);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+                }
+                else
+                {
+                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x - 1, currentHitCoordinates.y);
+                    if (heatMap[coordinate.x, coordinate.y] == -1)
+                    {
+                        coordinate = new Coordinate(currentHitCoordinates.x - 2, currentHitCoordinates.y);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+
+                    coordinate = new Coordinate(newHitCoordinate.x + 1, newHitCoordinate.y);
+                    if (heatMap[coordinate.x, coordinate.y] == -1)
+                    {
+                        coordinate = new Coordinate(newHitCoordinate.x + 2, newHitCoordinate.y);
+                    }
+                    if (TestCoordinates(coordinate))
+                    {
+                        possibleHitCoordinates.Add(coordinate);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -709,33 +882,13 @@ namespace BattleShip
             }
         }
 
-        void AddPossibleHitCoordinates(Tuple<int, int> hitCoordinates)
+        bool TestCoordinates(Coordinate hitCoordinate)
         {
-            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 - 1)))
-            {
-                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 - 1));
-            }
-            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 + 1)))
-            {
-                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2, hitCoordinates.Item1 + 1));
-            }
-            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2 - 1, hitCoordinates.Item1)))
-            {
-                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2 - 1, hitCoordinates.Item1));
-            }
-            if (TestCoordinates(new Tuple<int, int>(hitCoordinates.Item2 + 1, hitCoordinates.Item1)))
-            {
-                possibleHitCoordinates.Add(new Tuple<int, int>(hitCoordinates.Item2 + 1, hitCoordinates.Item1));
-            }
-        }
-
-        bool TestCoordinates(Tuple<int, int> hitCoordinate)
-        {
-            if(hitCoordinate.Item1 < 0 || hitCoordinate.Item1 > 9 || hitCoordinate.Item2 < 0 || hitCoordinate.Item2 > 9)
+            if (hitCoordinate.x < 0 || hitCoordinate.x > 9 || hitCoordinate.y < 0 || hitCoordinate.y > 9)
             {
                 return false;
             }
-            return heatMap[hitCoordinate.Item1, hitCoordinate.Item2] > 0;
+            return heatMap[hitCoordinate.x, hitCoordinate.y] > 0;
         }
 
         void PrintPlayerView()
