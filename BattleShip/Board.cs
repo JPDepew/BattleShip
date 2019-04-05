@@ -26,6 +26,7 @@ namespace BattleShip
         private Coordinate currentHitCoordinates;
         private List<Coordinate> possibleHitCoordinates;
         private List<Coordinate> currentShipCoordinates;
+        private List<int> remainingShipLengths;
         Random rnd;
 
         string[,] board;
@@ -41,6 +42,13 @@ namespace BattleShip
 
         public Board(string _name)
         {
+            // AI stuff
+            rnd = new Random();
+            possibleHitCoordinates = new List<Coordinate>();
+            currentShipCoordinates = new List<Coordinate>();
+            searchMode = SearchMode.SEARCH;
+            remainingShipLengths = new List<int>();
+
             name = _name;
             hits = 0;
             // initializing the number of max hits
@@ -52,16 +60,11 @@ namespace BattleShip
             for (int i = 0; i < ships.Length; i++)
             {
                 ships[i] = new Ship(shipLengths[i]);
+                remainingShipLengths.Add(shipLengths[i]);
             }
             board = new string[boardSize, boardSize];
             enemyView = new string[boardSize, boardSize];
             heatMap = new float[boardSize, boardSize];
-
-            // AI stuff
-            rnd = new Random();
-            possibleHitCoordinates = new List<Coordinate>();
-            currentShipCoordinates = new List<Coordinate>();
-            searchMode = SearchMode.SEARCH;
 
             InitializeBoard(board);
             InitializeBoard(enemyView);
@@ -93,6 +96,32 @@ namespace BattleShip
             }
         }
 
+        private int GetLargestRemainingShipLength()
+        {
+            int min = 0;
+            foreach (int l in remainingShipLengths)
+            {
+                if (l > min)
+                {
+                    min = l;
+                }
+            }
+            return min;
+        }
+
+        private int GetSmallestRemainingShipLength()
+        {
+            int min = 100;
+            foreach(int l in remainingShipLengths)
+            {
+                if(l < min)
+                {
+                    min = l;
+                }
+            }
+            return min;
+        }
+
         /// <summary>
         /// Very basic heat map. There are a few problems that we'll have to fix in the future. For example, once a ship has sunk, we 
         /// will have to mark those spots as sunk, or it will want to keep fireing around them.
@@ -108,6 +137,8 @@ namespace BattleShip
             float subtractValue = 0.0005f;
             float decrement = 0.0001f;
             float bonus = 0.01f;
+            int totalVerticalSpaces = 0;
+            int totalHorizontalSpaces = 0;
 
             if (enemyView[y, x] == "[O]")
             {
@@ -117,11 +148,13 @@ namespace BattleShip
             {
                 return -1;
             }
+
             for (int _x = x; _x < enemyView.GetLength(1); _x++)
             {
                 if (enemyView[y, _x] == "[X]")
                 {
                     sum += (addValue + bonus);
+                    break;
                 }
                 else if (enemyView[y, _x] == "[O]")
                 {
@@ -132,6 +165,7 @@ namespace BattleShip
                 {
                     sum += addValue;
                 }
+                totalHorizontalSpaces++;
                 subtractValue -= decrement;
                 addValue -= decrement;
             }
@@ -139,7 +173,7 @@ namespace BattleShip
             // reinitialize
             addValue = 0.0025f;
             subtractValue = 0.0005f;
-            for (int _x = x; _x >= 0 && enemyView[y, _x] != "[O]"; _x--)
+            for (int _x = x; _x >= 0; _x--)
             {
                 if (enemyView[y, _x] == "[X]")
                 {
@@ -154,13 +188,14 @@ namespace BattleShip
                 {
                     sum += addValue;
                 }
+                totalHorizontalSpaces++;
                 subtractValue -= decrement;
                 addValue -= decrement;
             }
 
             addValue = 0.0025f;
             subtractValue = 0.0005f;
-            for (int _y = y; _y < enemyView.GetLength(0) && enemyView[_y, x] != "[O]"; _y++)
+            for (int _y = y; _y < enemyView.GetLength(0); _y++)
             {
                 if (enemyView[_y, x] == "[X]")
                 {
@@ -175,13 +210,14 @@ namespace BattleShip
                 {
                     sum += addValue;
                 }
+                totalVerticalSpaces++;
                 subtractValue -= decrement;
                 addValue -= decrement;
             }
 
             addValue = 0.0025f;
             subtractValue = 0.0005f;
-            for (int _y = y; _y >= 0 && enemyView[_y, x] != "[O]"; _y--)
+            for (int _y = y; _y >= 0; _y--)
             {
                 if (enemyView[_y, x] == "[X]")
                 {
@@ -196,6 +232,7 @@ namespace BattleShip
                 {
                     sum += addValue;
                 }
+                totalVerticalSpaces++;
                 subtractValue -= decrement;
                 addValue -= decrement;
             }
