@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace BattleShip
@@ -290,6 +292,38 @@ namespace BattleShip
                 {
                     int x;
                     int y;
+                    string[,] previous_board;
+
+                    BinaryFormatter bf = new BinaryFormatter();
+
+                    // read in previous board values, this will be changing very soon (need to implement storing of frequencies also)
+                    try
+                    {
+                        using (FileStream fs = new FileStream("board.prev", FileMode.Open))
+                            previous_board = (string[,])bf.Deserialize(fs);
+
+                        Console.Write("  ");
+                        for (int i = 0; i < board.GetLength(0); i++)
+                        {
+                            Console.Write("  " + i + " ");
+                        }
+                        Console.WriteLine();
+                        for (int i = 0; i < board.GetLength(1); i++)
+                        {
+                            Console.Write(i + "  ");
+                            for (int j = 0; j < board.GetLength(0); j++)
+                            {
+                                Console.Write(previous_board[i, j] + " ");
+                            }
+                            Console.WriteLine();
+                        }
+
+                        Console.Read();
+                    }
+                    catch
+                    {
+                        Console.Write("No previous board available");
+                    }
 
                     Random rand = new Random();
                     y = rand.Next(0, board.GetLength(0));
@@ -883,6 +917,11 @@ namespace BattleShip
                     if (playerB.GetHits() >= playerB.GetMaxHits())
                     {
                         Console.WriteLine("Game Over, " + name + " wins!");
+                        BinaryFormatter bf = new BinaryFormatter();
+
+                        // serialize board state, this is used to calculate values. this might change to just serialize the array of frequencies
+                        using (FileStream fs = new FileStream("board.prev", FileMode.Create))
+                            bf.Serialize(fs, board);
                         return true;
                     }
                 }
@@ -896,6 +935,11 @@ namespace BattleShip
                     if (playerB.GetHits() >= playerB.GetMaxHits())
                     {
                         Console.WriteLine("Game Over, " + name + " wins!");
+                        BinaryFormatter bf = new BinaryFormatter();
+
+                        // writing
+                        using (FileStream fs = new FileStream("board.prev", FileMode.Create))
+                            bf.Serialize(fs, board);
                         return true;
                     }
                 }
