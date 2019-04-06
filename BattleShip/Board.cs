@@ -26,12 +26,14 @@ namespace BattleShip
         private Coordinate currentHitCoordinates;
         private List<Coordinate> possibleHitCoordinates;
         private List<Coordinate> currentShipCoordinates;
+        private List<Coordinate> startingCoordinates;
+        private List<Coordinate> cleanupCoordinates;
         private List<int> remainingShipLengths;
+        float[,] heatMap;
         Random rnd;
 
         string[,] board;
         string[,] enemyView;
-        float[,] heatMap;
         int[] shipLengths = { 5, 4, 3, 3, 2 };
         Ship[] ships = new Ship[5];
 
@@ -46,6 +48,8 @@ namespace BattleShip
             rnd = new Random();
             possibleHitCoordinates = new List<Coordinate>();
             currentShipCoordinates = new List<Coordinate>();
+            startingCoordinates = new List<Coordinate>();
+            cleanupCoordinates = new List<Coordinate>();
             searchMode = SearchMode.SEARCH;
             remainingShipLengths = new List<int>();
 
@@ -66,6 +70,7 @@ namespace BattleShip
             enemyView = new string[boardSize, boardSize];
             heatMap = new float[boardSize, boardSize];
 
+            InitializeStartingCoordinates();
             InitializeBoard(board);
             InitializeBoard(enemyView);
         }
@@ -133,9 +138,9 @@ namespace BattleShip
         {
             // need to add: keeping in mind what the max ship length left is
             float sum = 0;
-            float addValue = 0.0025f;
+            float addValue = 0.0015f;
             float subtractValue = 0.0005f;
-            float decrement = 0.0001f;
+            float decrement = 0.0003f;
             float bonus = 0.01f;
             int totalVerticalSpaces = -1;
             int totalHorizontalSpaces = -1;
@@ -284,6 +289,40 @@ namespace BattleShip
                 {
                     board[i, j] = "[ ]";
                 }
+            }
+        }
+
+        void InitializeStartingCoordinates()
+        {
+            for (int i = 0; i < boardSize - 1; i++)
+            {
+                // diagonal pattern across whole board;
+                startingCoordinates.Add(new Coordinate(i + 1, i));
+            }
+            for (int i = 0; i < boardSize - 4; i++)
+            {
+                // starting at (4,0)
+                startingCoordinates.Add(new Coordinate(i + 4, i));
+            }
+            for (int i = 0; i < boardSize - 7; i++)
+            {
+                // starting at (7,0)
+                startingCoordinates.Add(new Coordinate(i + 7, i));
+            }
+            for (int i = 0; i < boardSize - 2; i++)
+            {
+                // starting at (0,2)
+                startingCoordinates.Add(new Coordinate(i, i + 2));
+            }
+            for (int i = 0; i < boardSize - 5; i++)
+            {
+                // starting at (0,5)
+                startingCoordinates.Add(new Coordinate(i, i + 5));
+            }
+            for (int i = 0; i < boardSize - 8; i++)
+            {
+                // starting at (0,5)
+                startingCoordinates.Add(new Coordinate(i, i + 8));
             }
         }
 
@@ -535,14 +574,25 @@ namespace BattleShip
             {
                 do
                 {
-                    yPos = rnd.Next(0, 10);
-                    if (yPos % 2 == 0) // odd numbers
+                    // This is the strafing pattern from the article
+                    if (startingCoordinates.Count > 0)
                     {
-                        xPos = rnd.Next(0, 5) * 2 + 1;
+                        Coordinate coordinate = ChooseFromStartingHitCoordinates();
+                        yPos = coordinate.y;
+                        xPos = coordinate.x;
                     }
-                    else // even numbers
+                    // This is the cleanup pattern
+                    else
                     {
-                        xPos = rnd.Next(0, 5) * 2;
+                        yPos = rnd.Next(0, 10);
+                        if (yPos % 2 == 0) // odd numbers
+                        {
+                            xPos = rnd.Next(0, 5) * 2 + 1;
+                        }
+                        else // even numbers
+                        {
+                            xPos = rnd.Next(0, 5) * 2;
+                        }
                     }
 
                     hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
@@ -864,6 +914,24 @@ namespace BattleShip
                 }
             }
             possibleHitCoordinates.Remove(highestCoordinates);
+
+            return highestCoordinates;
+        }
+
+        Coordinate ChooseFromStartingHitCoordinates()
+        {
+            Coordinate highestCoordinates = new Coordinate(0, 0);
+            float highestValue = 0;
+
+            foreach (Coordinate t in startingCoordinates)
+            {
+                if (heatMap[t.y, t.x] > highestValue)
+                {
+                    highestValue = heatMap[t.y, t.x];
+                    highestCoordinates = t;
+                }
+            }
+            startingCoordinates.Remove(highestCoordinates);
 
             return highestCoordinates;
         }
