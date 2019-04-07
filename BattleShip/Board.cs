@@ -602,6 +602,9 @@ namespace BattleShip
 
             GenerateHeatMap();
             PrintHeatMap();
+            // makes sure that these lists don't contain any values that are equal to 0. No need to search there in that case.
+            CleanUpList(startingCoordinates);
+            CleanUpList(possibleHitCoordinates);
             Console.ReadLine();
 
             if (searchMode == SearchMode.SEARCH)
@@ -887,6 +890,27 @@ namespace BattleShip
 
                 return false;
             }
+        }
+
+        void CleanUpList(List<Coordinate> coordinates)
+        {
+            List<Coordinate> tempList = new List<Coordinate>();
+
+            foreach (Coordinate c in coordinates)
+            {
+                if (heatMap[c.y, c.x] == 0)
+                {
+                    tempList.Add(c);
+                }
+            }
+
+
+            foreach (Coordinate c in tempList)
+            {
+                coordinates.Remove(c);
+            }
+
+            //return coordinates;
         }
 
         /// <summary>
