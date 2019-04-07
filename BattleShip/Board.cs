@@ -149,6 +149,8 @@ namespace BattleShip
             int maxShipLength = GetLargestRemainingShipLength();
             int minShipLength = GetSmallestRemainingShipLength();
 
+            bool nextToHit = false;
+
             if (enemyView[y, x] == "[O]")
             {
                 return sum;
@@ -163,6 +165,7 @@ namespace BattleShip
             {
                 if (enemyView[y, _x] == "[X]")
                 {
+                    nextToHit = true;
                     sum += (addValue + bonus);
                     break;
                 }
@@ -187,6 +190,7 @@ namespace BattleShip
             {
                 if (enemyView[y, _x] == "[X]")
                 {
+                    nextToHit = true;
                     sum += (addValue + bonus);
                 }
                 else if (enemyView[y, _x] == "[O]")
@@ -209,6 +213,7 @@ namespace BattleShip
             {
                 if (enemyView[_y, x] == "[X]")
                 {
+                    nextToHit = true;
                     sum += (addValue + bonus);
                 }
                 else if (enemyView[_y, x] == "[O]")
@@ -231,6 +236,7 @@ namespace BattleShip
             {
                 if (enemyView[_y, x] == "[X]")
                 {
+                    nextToHit = true;
                     sum += (addValue + bonus);
                 }
                 else if (enemyView[_y, x] == "[O]")
@@ -247,7 +253,10 @@ namespace BattleShip
                 addValue -= decrement;
             }
 
-            if (totalHorizontalSpaces < minShipLength && totalVerticalSpaces < minShipLength)
+            // This line should discard any spaces that do not have the possiblilty of containing the ship.
+            // - nextToHit is necessary because, even if there is only 1 enclosed spot, if it is next to a hit,
+            //   it could still be a ship location
+            if (totalHorizontalSpaces < minShipLength && totalVerticalSpaces < minShipLength && !nextToHit)
             {
                 sum = 0;
             }
