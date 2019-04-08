@@ -25,7 +25,7 @@ namespace BattleShip
         // AI stuff
         public bool AI;
         public bool oddStartingParity = true;
-        private Coordinate currentHitCoordinates;
+        private Coordinate currentHitCoordinate;
         private List<Coordinate> possibleHitCoordinates;
         private List<Coordinate> currentShipCoordinates;
         private List<Coordinate> startingCoordinates;
@@ -138,7 +138,9 @@ namespace BattleShip
         /// <returns>Value for cell</returns>
         float CreateValueForCell(int x, int y)
         {
-            // need to add: keeping in mind what the max ship length left is
+            // There is still an edgecase not accounted for here. If ships like this: 1 1 2 2 2, and hit like this 1 X X X X.
+            // If that '1' is surrounded by O's, then there is no chance that it will be hit. I think the way to solve this would be
+            // to change sunk ships to [S], then nextToHit would be true next to [S].
             float sum = 0;
             float addValue = 0.0015f;
             float subtractValue = 0.0005f;
@@ -174,6 +176,12 @@ namespace BattleShip
                     sum -= subtractValue;
                     break;
                 }
+                else if (enemyView[y, _x] == "[S]")
+                {
+                    nextToHit = true;
+                    sum -= subtractValue;
+                    break;
+                }
                 else
                 {
                     sum += addValue;
@@ -195,6 +203,12 @@ namespace BattleShip
                 }
                 else if (enemyView[y, _x] == "[O]")
                 {
+                    sum -= subtractValue;
+                    break;
+                }
+                else if (enemyView[y, _x] == "[S]")
+                {
+                    nextToHit = true;
                     sum -= subtractValue;
                     break;
                 }
@@ -221,6 +235,12 @@ namespace BattleShip
                     sum -= subtractValue;
                     break;
                 }
+                else if (enemyView[_y, x] == "[S]")
+                {
+                    nextToHit = true;
+                    sum -= subtractValue;
+                    break;
+                }
                 else
                 {
                     sum += addValue;
@@ -241,6 +261,12 @@ namespace BattleShip
                 }
                 else if (enemyView[_y, x] == "[O]")
                 {
+                    sum -= subtractValue;
+                    break;
+                }
+                else if (enemyView[_y, x] == "[S]")
+                {
+                    nextToHit = true;
                     sum -= subtractValue;
                     break;
                 }
@@ -332,8 +358,38 @@ namespace BattleShip
             }
             for (int i = 0; i < boardSize - 8; i++)
             {
-                // starting at (0,5)
+                // starting at (0,7)
                 startingCoordinates.Add(new Coordinate(i, i + 8));
+            }
+        }
+
+        void InitializeCleanupCoordinates()
+        {
+            for (int i = 0; i < boardSize - 3; i++)
+            {
+                // diagonal pattern across whole board;
+                startingCoordinates.Add(new Coordinate(i + 3, i));
+            }
+            for (int i = 0; i < boardSize - 6; i++)
+            {
+                // starting at (6,0)
+                startingCoordinates.Add(new Coordinate(i + 6, i));
+            }
+            startingCoordinates.Add(new Coordinate(9, 0));
+            for (int i = 0; i < boardSize - 1; i++)
+            {
+                // starting at (0,1)
+                startingCoordinates.Add(new Coordinate(i, i + 1));
+            }
+            for (int i = 0; i < boardSize - 4; i++)
+            {
+                // starting at (0,4)
+                startingCoordinates.Add(new Coordinate(i, i + 4));
+            }
+            for (int i = 0; i < boardSize - 7; i++)
+            {
+                // starting at (0,7)
+                startingCoordinates.Add(new Coordinate(i, i + 7));
             }
         }
 
@@ -614,6 +670,7 @@ namespace BattleShip
             // makes sure that these lists don't contain any values that are equal to 0. No need to search there in that case.
             CleanUpList(startingCoordinates);
             CleanUpList(possibleHitCoordinates);
+            CleanUpList(cleanupCoordinates);
             Console.ReadLine();
 
             if (searchMode == SearchMode.SEARCH)
@@ -623,11 +680,17 @@ namespace BattleShip
                     // This is the strafing pattern from the article
                     if (startingCoordinates.Count > 0)
                     {
-                        Coordinate coordinate = ChooseFromStartingHitCoordinates();
+                        Coordinate coordinate = ChooseCoordinateFromFromList(startingCoordinates);
                         yPos = coordinate.y;
                         xPos = coordinate.x;
                     }
                     // This is the cleanup pattern
+                    else if (cleanupCoordinates.Count > 0)
+                    {
+                        Coordinate coordinate = ChooseCoordinateFromFromList(cleanupCoordinates);
+                        xPos = coordinate.x;
+                        yPos = coordinate.y;
+                    }
                     else
                     {
                         yPos = rnd.Next(0, 10);
@@ -646,14 +709,25 @@ namespace BattleShip
                 if (hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
                 {
                     searchMode = SearchMode.HUNT;
-                    currentHitCoordinates = new Coordinate(xPos, yPos);
-                    currentShipCoordinates.Add(currentHitCoordinates);
-                    AddSurroundingPossibleHitCoordinates(currentHitCoordinates);
+                    currentHitCoordinate = new Coordinate(xPos, yPos);
+                    currentShipCoordinates.Add(currentHitCoordinate);
+                    AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
                 }
             }
             else if (searchMode == SearchMode.HUNT)
             {
-                Coordinate location = ChooseFromPossibleHitCoordinates();
+                if (possibleHitCoordinates.Count == 0)
+                {
+                    // Unless I'm messing this up, this will add all the current hits to the list if hunt has no more places to shoot
+                    foreach (Coordinate c in currentShipCoordinates)
+                    {
+                        if (c != currentHitCoordinate)
+                        {
+                            AddSurroundingPossibleHitCoordinates(c);
+                        }
+                    }
+                }
+                Coordinate location = ChooseCoordinateFromFromList(possibleHitCoordinates);
                 hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
 
                 if (hitStatus == HitStatus.HIT)
@@ -674,14 +748,18 @@ namespace BattleShip
                     possibleHitCoordinates.Clear();
                     searchMode = SearchMode.SEARCH;
                 }
-                else if (possibleHitCoordinates.Count == 0)
-                {
-                    searchMode = SearchMode.SEARCH;
-                }
             }
             else if (searchMode == SearchMode.NARROWEDHUNT)
             {
-                Coordinate location = ChooseFromPossibleHitCoordinates();
+                if (possibleHitCoordinates.Count == 0)
+                {
+                    // this means that no ship was sunk, but we're out of possible hit spots...
+                    // I think that the best thing is to hunt again from the original coordinate
+                    searchMode = SearchMode.HUNT;
+                    AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
+                }
+
+                Coordinate location = ChooseCoordinateFromFromList(possibleHitCoordinates);
                 hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
 
                 if (hitStatus == HitStatus.HIT)
@@ -691,11 +769,9 @@ namespace BattleShip
                 }
                 else if (hitStatus == HitStatus.SUNK)
                 {
-                    // in here we need to check the distance between location and currentHitCoord.
-                    // That way we can see how large the ship was and remove it from possible ships.
-                    // we also need to keep track of the ship lengths still out there and integrate that into the heatmap.
-                    // ALSO - when a ship is sunk, it needs to be marked in a way on the board so that the heatmap will 
-                    // recongnize that it's not as likely that a ship will be near those cells.
+                    // TODO: if ship of length that is greater than is actually possible is sunk, re-search those coordinates.
+                    // Something that would also be cool, is that if a ship of length 4 is sunk, and then another ship of length 4 is sunk,
+                    // it would search both spots to see what it missed.
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
                     Console.WriteLine("Length: " + currentShipCoordinates.Count);
                     Console.ReadKey();
@@ -706,12 +782,6 @@ namespace BattleShip
                     currentShipCoordinates.Clear();
                     possibleHitCoordinates.Clear();
                     searchMode = SearchMode.SEARCH;
-                }
-                else if (possibleHitCoordinates.Count == 0)
-                {
-                    // this means that no ship was sunk, but we're out of possible hit spots...
-                    // I think that the best thing is to hunt again from the original coordinate
-                    searchMode = SearchMode.HUNT;
                 }
             }
 
@@ -953,7 +1023,7 @@ namespace BattleShip
         {
             foreach (Coordinate c in currentShipCoordinates)
             {
-                enemyView[c.y, c.x] = "[O]";
+                enemyView[c.y, c.x] = "[S]";
             }
         }
 
@@ -977,12 +1047,12 @@ namespace BattleShip
         /// Gives you the highest coordinate to choose from and then removes it from the list (possibleHitCoordinates)
         /// </summary>
         /// <returns></returns>
-        Coordinate ChooseFromPossibleHitCoordinates()
+        Coordinate ChooseCoordinateFromFromList(List<Coordinate> coordinates)
         {
             Coordinate highestCoordinates = new Coordinate(0, 0);
             float highestValue = 0;
 
-            foreach (Coordinate t in possibleHitCoordinates)
+            foreach (Coordinate t in coordinates)
             {
                 if (heatMap[t.y, t.x] > highestValue)
                 {
@@ -990,25 +1060,7 @@ namespace BattleShip
                     highestCoordinates = t;
                 }
             }
-            possibleHitCoordinates.Remove(highestCoordinates);
-
-            return highestCoordinates;
-        }
-
-        Coordinate ChooseFromStartingHitCoordinates()
-        {
-            Coordinate highestCoordinates = new Coordinate(0, 0);
-            float highestValue = 0;
-
-            foreach (Coordinate t in startingCoordinates)
-            {
-                if (heatMap[t.y, t.x] > highestValue)
-                {
-                    highestValue = heatMap[t.y, t.x];
-                    highestCoordinates = t;
-                }
-            }
-            startingCoordinates.Remove(highestCoordinates);
+            coordinates.Remove(highestCoordinates);
 
             return highestCoordinates;
         }
@@ -1040,17 +1092,17 @@ namespace BattleShip
         void AddNarrowedPossibleHitCoordinates(Coordinate newHitCoordinate)
         {
             // Up or down
-            if (currentHitCoordinates.x == newHitCoordinate.x)
+            if (currentHitCoordinate.x == newHitCoordinate.x)
             {
-                if (currentHitCoordinates.y > newHitCoordinate.y)
+                if (currentHitCoordinate.y > newHitCoordinate.y)
                 {
-                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y + 1);
+                    Coordinate coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y + 1);
 
                     if (TestCoordinates(coordinate))
                     {
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
-                            coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y + 2);
+                            coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y + 2);
                         }
                         possibleHitCoordinates.Add(coordinate);
                     }
@@ -1067,13 +1119,13 @@ namespace BattleShip
                 }
                 else
                 {
-                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y - 1);
+                    Coordinate coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y - 1);
 
                     if (TestCoordinates(coordinate))
                     {
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
-                            coordinate = new Coordinate(currentHitCoordinates.x, currentHitCoordinates.y - 2);
+                            coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y - 2);
                         }
                         possibleHitCoordinates.Add(coordinate);
                     }
@@ -1091,17 +1143,17 @@ namespace BattleShip
                 }
             }
             // left or right
-            else if (currentHitCoordinates.y == newHitCoordinate.y)
+            else if (currentHitCoordinate.y == newHitCoordinate.y)
             {
-                if (currentHitCoordinates.x > newHitCoordinate.x)
+                if (currentHitCoordinate.x > newHitCoordinate.x)
                 {
-                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x + 1, currentHitCoordinates.y);
+                    Coordinate coordinate = new Coordinate(currentHitCoordinate.x + 1, currentHitCoordinate.y);
 
                     if (TestCoordinates(coordinate))
                     {
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
-                            coordinate = new Coordinate(currentHitCoordinates.x + 2, currentHitCoordinates.y);
+                            coordinate = new Coordinate(currentHitCoordinate.x + 2, currentHitCoordinate.y);
                         }
                         possibleHitCoordinates.Add(coordinate);
                     }
@@ -1119,12 +1171,12 @@ namespace BattleShip
                 }
                 else
                 {
-                    Coordinate coordinate = new Coordinate(currentHitCoordinates.x - 1, currentHitCoordinates.y);
+                    Coordinate coordinate = new Coordinate(currentHitCoordinate.x - 1, currentHitCoordinate.y);
                     if (TestCoordinates(coordinate))
                     {
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
-                            coordinate = new Coordinate(currentHitCoordinates.x - 2, currentHitCoordinates.y);
+                            coordinate = new Coordinate(currentHitCoordinate.x - 2, currentHitCoordinate.y);
                         }
                         possibleHitCoordinates.Add(coordinate);
                     }
