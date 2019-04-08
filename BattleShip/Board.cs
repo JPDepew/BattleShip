@@ -39,6 +39,8 @@ namespace BattleShip
         int[] shipLengths = { 5, 4, 3, 3, 2 };
         Ship[] ships = new Ship[5];
 
+        int[,] freqTable = new int[10, 10];
+
         SearchMode searchMode;
         int boardSize = 10;
         int hits;
@@ -401,42 +403,43 @@ namespace BattleShip
             if (AI)
             {
                 int ind = 0;
+
+                // read in previous board values, this will be changing very soon (need to implement storing of frequencies also)
+                try
+                {
+                    BinaryFormatter bf = new BinaryFormatter();
+
+                    using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
+                        freqTable = (int[,])bf.Deserialize(fs);
+
+                    Console.Write("  ");
+                    for (int i = 0; i < board.GetLength(0); i++)
+                    {
+                        Console.Write("  " + i + " ");
+                    }
+                    Console.WriteLine();
+                    for (int i = 0; i < board.GetLength(1); i++)
+                    {
+                        Console.Write(i + "  ");
+                        for (int j = 0; j < board.GetLength(0); j++)
+                        {
+                            Console.Write(freqTable[i, j] + " ");
+                        }
+                        Console.WriteLine();
+                    }
+
+                    Console.Read();
+                }
+                catch
+                {
+                    Console.Write("No previous board available");
+                }
+
+
                 while (ind < shipLengths.GetLength(0))
                 {
                     int x;
                     int y;
-                    string[,] previous_board;
-
-                    BinaryFormatter bf = new BinaryFormatter();
-
-                    // read in previous board values, this will be changing very soon (need to implement storing of frequencies also)
-                    try
-                    {
-                        using (FileStream fs = new FileStream("board.prev", FileMode.Open))
-                            previous_board = (string[,])bf.Deserialize(fs);
-
-                        Console.Write("  ");
-                        for (int i = 0; i < board.GetLength(0); i++)
-                        {
-                            Console.Write("  " + i + " ");
-                        }
-                        Console.WriteLine();
-                        for (int i = 0; i < board.GetLength(1); i++)
-                        {
-                            Console.Write(i + "  ");
-                            for (int j = 0; j < board.GetLength(0); j++)
-                            {
-                                Console.Write(previous_board[i, j] + " ");
-                            }
-                            Console.WriteLine();
-                        }
-
-                        Console.Read();
-                    }
-                    catch
-                    {
-                        Console.Write("No previous board available");
-                    }
 
                     Random rand = new Random();
                     y = rand.Next(0, board.GetLength(0));
@@ -925,9 +928,24 @@ namespace BattleShip
                         Console.WriteLine("Game Over, " + name + " wins!");
                         BinaryFormatter bf = new BinaryFormatter();
 
-                        // serialize board state, this is used to calculate values. this might change to just serialize the array of frequencies
-                        using (FileStream fs = new FileStream("board.prev", FileMode.Create))
-                            bf.Serialize(fs, board);
+                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
+                            freqTable = (int[,])bf.Deserialize(fs);
+
+                        // Create frequency map of hits
+                        for (int i = 0; i < board.GetLength(0); i++)
+                        {
+                            for (int j = 0; j < board.GetLength(1); j++)
+                            {
+                                if (board[i, j] != "[ ]")
+                                {
+                                    freqTable[i, j] += 1;
+                                }
+                            }
+                        }
+
+                        // Serialize frequency table, this will allow us to learn strong positions for AI vs AI.  Will need to change this model to adapt against players
+                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Create))
+                            bf.Serialize(fs, freqTable);
                         return true;
                     }
                 }
@@ -945,9 +963,24 @@ namespace BattleShip
                         Console.WriteLine("Game Over, " + name + " wins!");
                         BinaryFormatter bf = new BinaryFormatter();
 
-                        // writing
-                        using (FileStream fs = new FileStream("board.prev", FileMode.Create))
-                            bf.Serialize(fs, board);
+                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
+                            freqTable = (int[,])bf.Deserialize(fs);
+
+                        // Create frequency map of hits
+                        for (int i = 0; i < board.GetLength(0); i++)
+                        {
+                            for (int j = 0; j < board.GetLength(1); j++)
+                            {
+                                if (board[i, j] != "[ ]")
+                                {
+                                    freqTable[i, j] += 1;
+                                }
+                            }
+                        }
+
+                        // Serialize frequency table, this will allow us to learn strong positions for AI vs AI.  Will need to change this model to adapt against players
+                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Create))
+                            bf.Serialize(fs, freqTable);
                         return true;
                     }
                 }
