@@ -7,7 +7,7 @@ namespace BattleShip
 	class Ship{
 		public int length;
 		public int hits;
-        public Tuple<int, int> coordinates;
+        public List<Coordinate> coordinates;
 
         public Ship(int _length)
         {
