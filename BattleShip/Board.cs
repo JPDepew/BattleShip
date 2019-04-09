@@ -36,6 +36,8 @@ namespace BattleShip
         private List<Coordinate> startingCoordinates;
         private List<Coordinate> cleanupCoordinates;
         private List<int> remainingShipLengths;
+        private List<Ship> sunkShips;
+        private Ship currentShip;
         float[,] heatMap;
         Random rnd;
 
@@ -61,6 +63,8 @@ namespace BattleShip
             cleanupCoordinates = new List<Coordinate>();
             searchMode = SearchMode.SEARCH;
             remainingShipLengths = new List<int>();
+            sunkShips = new List<Ship>();
+            currentShip = new Ship();
 
             name = _name;
             hits = 0;
@@ -735,8 +739,9 @@ namespace BattleShip
             {
                 if (possibleHitCoordinates.Count == 0)
                 {
+                    GenerateHeatMap();
                     // Unless I'm messing this up, this will add all the current hits to the list if hunt has no more places to shoot
-                    foreach (Coordinate c in currentShipCoordinates)
+                    foreach (Coordinate c in currentShip.coordinates)
                     {
                         if (c != currentHitCoordinate)
                         {
@@ -749,6 +754,7 @@ namespace BattleShip
 
                 if (hitStatus == HitStatus.HIT)
                 {
+                    GenerateHeatMap();
                     possibleHitCoordinates.Clear();
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
                     AddNarrowedPossibleHitCoordinates(location);
@@ -758,25 +764,41 @@ namespace BattleShip
                 {
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
-                    ReMarkBoardOnDestroyedShip();
-                    RemoveDestroyedShip();
-                    // clearing out the lists
+                    Ship sunkShip = new Ship(currentShipCoordinates.Count);
+                    sunkShip.AddSunkShips(currentShipCoordinates);
+                    currentShip = sunkShip;
                     currentShipCoordinates.Clear();
-                    possibleHitCoordinates.Clear();
-                    searchMode = SearchMode.SEARCH;
+
+                    // There are more hits than should be needed to sink a ship.
+                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() || !sunkShip.AreCoordinatesAligned())
+                    {
+                        GenerateHeatMap();
+                        searchMode = SearchMode.HUNT;
+                        AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
+                    }
+                    else
+                    {
+                        // clearing out the lists
+                        possibleHitCoordinates.Clear();
+                        currentShipCoordinates.Clear(); // redundant
+                        RemoveDestroyedShip();
+                        searchMode = SearchMode.SEARCH;
+                    }
+                    ReMarkBoardOnDestroyedShip();
                 }
             }
             else if (searchMode == SearchMode.NARROWEDHUNT)
             {
                 if (possibleHitCoordinates.Count == 0)
                 {
+                    GenerateHeatMap();
                     // this means that no ship was sunk, but we're out of possible hit spots...
                     AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
 
                     if (possibleHitCoordinates.Count == 0)
                     {
                         // Unless I'm messing this up, this will add all the current hits to the list if hunt has no more places to shoot
-                        foreach (Coordinate c in currentShipCoordinates)
+                        foreach (Coordinate c in currentShip.coordinates)
                         {
                             if (c != currentHitCoordinate)
                             {
@@ -792,6 +814,7 @@ namespace BattleShip
 
                 if (hitStatus == HitStatus.HIT)
                 {
+                    GenerateHeatMap();
                     searchMode = SearchMode.NARROWEDHUNT;
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
                     AddNarrowedPossibleHitCoordinates(location);
@@ -805,9 +828,15 @@ namespace BattleShip
                     Console.WriteLine("Length: " + currentShipCoordinates.Count);
                     Console.ReadKey();
 
+                    Ship sunkShip = new Ship(currentShipCoordinates.Count);
+                    sunkShip.AddSunkShips(currentShipCoordinates);
+                    currentShip = sunkShip;
+                    currentShipCoordinates.Clear();
+
                     // There are more hits than should be needed to sink a ship.
-                    if (currentShipCoordinates.Count > GetLargestRemainingShipLength())
+                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() || !sunkShip.AreCoordinatesAligned())
                     {
+                        GenerateHeatMap();
                         searchMode = SearchMode.HUNT;
                         AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
                     }
@@ -815,7 +844,7 @@ namespace BattleShip
                     {
                         // clearing out the lists
                         possibleHitCoordinates.Clear();
-                        currentShipCoordinates.Clear();
+                        currentShipCoordinates.Clear(); // redundant
                         RemoveDestroyedShip();
                         searchMode = SearchMode.SEARCH;
                     }
@@ -1046,19 +1075,16 @@ namespace BattleShip
 
             foreach (Coordinate c in coordinates)
             {
-                if (heatMap[c.y, c.x] == 0)
+                if (heatMap[c.y, c.x] <= 0)
                 {
                     tempList.Add(c);
                 }
             }
 
-
             foreach (Coordinate c in tempList)
             {
                 coordinates.Remove(c);
             }
-
-            //return coordinates;
         }
 
         /// <summary>
