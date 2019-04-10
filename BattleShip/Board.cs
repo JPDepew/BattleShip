@@ -1106,7 +1106,7 @@ namespace BattleShip
             {
                 return false;
             }
-            return heatMap[hitCoordinate.y, hitCoordinate.x] > 0;
+            return !(heatMap[hitCoordinate.y, hitCoordinate.x] == 0);
         }
 
         void PrintPlayerView()
@@ -1170,21 +1170,48 @@ namespace BattleShip
 
         void AddSurroundingPossibleHitCoordinates(Coordinate hitCoordinates)
         {
-            if (TestCoordinates(new Coordinate(hitCoordinates.x, hitCoordinates.y - 1)))
+            Coordinate coordinate = new Coordinate(hitCoordinates.x, hitCoordinates.y - 1);
+            if (TestCoordinates(coordinate))
             {
-                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x, hitCoordinates.y - 1));
+                if (heatMap[coordinate.y, coordinate.x] == -1)
+                {
+                    coordinate = new Coordinate(hitCoordinates.x, hitCoordinates.y - 2);
+                }
+                if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
+                    possibleHitCoordinates.Add(coordinate);
             }
-            if (TestCoordinates(new Coordinate(hitCoordinates.x, hitCoordinates.y + 1)))
+
+            coordinate = new Coordinate(hitCoordinates.x, hitCoordinates.y + 1);
+            if (TestCoordinates(coordinate))
             {
-                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x, hitCoordinates.y + 1));
+                if (heatMap[coordinate.y, coordinate.x] == -1)
+                {
+                    coordinate = new Coordinate(hitCoordinates.x, hitCoordinates.y + 2);
+                }
+                if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
+                    possibleHitCoordinates.Add(coordinate);
             }
-            if (TestCoordinates(new Coordinate(hitCoordinates.x - 1, hitCoordinates.y)))
+
+            coordinate = new Coordinate(hitCoordinates.x - 1, hitCoordinates.y);
+            if (TestCoordinates(coordinate))
             {
-                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x - 1, hitCoordinates.y));
+                if (heatMap[coordinate.y, coordinate.x] == -1)
+                {
+                    coordinate = new Coordinate(hitCoordinates.x - 2, hitCoordinates.y);
+                }
+                if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
+                    possibleHitCoordinates.Add(coordinate);
             }
-            if (TestCoordinates(new Coordinate(hitCoordinates.x + 1, hitCoordinates.y)))
+
+            coordinate = new Coordinate(hitCoordinates.x + 1, hitCoordinates.y);
+            if (TestCoordinates(coordinate))
             {
-                possibleHitCoordinates.Add(new Coordinate(hitCoordinates.x + 1, hitCoordinates.y));
+                if (heatMap[coordinate.y, coordinate.x] == -1)
+                {
+                    coordinate = new Coordinate(hitCoordinates.x + 2, hitCoordinates.y);
+                }
+                if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
+                    possibleHitCoordinates.Add(coordinate);
             }
         }
 
@@ -1207,7 +1234,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y + 2);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
 
@@ -1218,7 +1245,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y - 2);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
                 }
@@ -1232,7 +1259,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y - 2);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
 
@@ -1244,7 +1271,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y + 2);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
                 }
@@ -1262,7 +1289,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(currentHitCoordinate.x + 2, currentHitCoordinate.y);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
 
@@ -1274,7 +1301,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(newHitCoordinate.x - 2, newHitCoordinate.y);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
                 }
@@ -1287,7 +1314,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(currentHitCoordinate.x - 2, currentHitCoordinate.y);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
 
@@ -1298,7 +1325,7 @@ namespace BattleShip
                         {
                             coordinate = new Coordinate(newHitCoordinate.x + 2, newHitCoordinate.y);
                         }
-                        if (TestCoordinates(coordinate))
+                        if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
                 }
