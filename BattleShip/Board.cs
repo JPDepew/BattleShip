@@ -84,6 +84,7 @@ namespace BattleShip
             heatMap = new float[boardSize, boardSize];
 
             InitializeStartingCoordinates();
+            InitializeCleanupCoordinates();
             InitializeBoard(board);
             InitializeBoard(enemyView);
         }
@@ -188,7 +189,7 @@ namespace BattleShip
                 }
                 else if (enemyView[y, _x] == "[O]")
                 {
-                    sum -= subtractValue;
+                    //sum -= subtractValue;
                     break;
                 }
                 else if (enemyView[y, _x] == "[S]")
@@ -219,7 +220,7 @@ namespace BattleShip
                 }
                 else if (enemyView[y, _x] == "[O]")
                 {
-                    sum -= subtractValue;
+                    //sum -= subtractValue;
                     break;
                 }
                 else if (enemyView[y, _x] == "[S]")
@@ -249,7 +250,7 @@ namespace BattleShip
                 }
                 else if (enemyView[_y, x] == "[O]")
                 {
-                    sum -= subtractValue;
+                    //sum -= subtractValue;
                     break;
                 }
                 else if (enemyView[_y, x] == "[S]")
@@ -279,7 +280,7 @@ namespace BattleShip
                 }
                 else if (enemyView[_y, x] == "[O]")
                 {
-                    sum -= subtractValue;
+                    //sum -= subtractValue;
                     break;
                 }
                 else if (enemyView[_y, x] == "[S]")
@@ -387,28 +388,28 @@ namespace BattleShip
             for (int i = 0; i < boardSize - 3; i++)
             {
                 // diagonal pattern across whole board;
-                startingCoordinates.Add(new Coordinate(i + 3, i));
+                cleanupCoordinates.Add(new Coordinate(i + 3, i));
             }
             for (int i = 0; i < boardSize - 6; i++)
             {
                 // starting at (6,0)
-                startingCoordinates.Add(new Coordinate(i + 6, i));
+                cleanupCoordinates.Add(new Coordinate(i + 6, i));
             }
             startingCoordinates.Add(new Coordinate(9, 0));
             for (int i = 0; i < boardSize - 1; i++)
             {
                 // starting at (0,1)
-                startingCoordinates.Add(new Coordinate(i, i + 1));
+                cleanupCoordinates.Add(new Coordinate(i, i + 1));
             }
             for (int i = 0; i < boardSize - 4; i++)
             {
                 // starting at (0,4)
-                startingCoordinates.Add(new Coordinate(i, i + 4));
+                cleanupCoordinates.Add(new Coordinate(i, i + 4));
             }
             for (int i = 0; i < boardSize - 7; i++)
             {
                 // starting at (0,7)
-                startingCoordinates.Add(new Coordinate(i, i + 7));
+                cleanupCoordinates.Add(new Coordinate(i, i + 7));
             }
         }
 
@@ -687,16 +688,24 @@ namespace BattleShip
 
             GenerateHeatMap();
             PrintHeatMap();
+            PrintEnemyView();
             // makes sure that these lists don't contain any values that are equal to 0. No need to search there in that case.
             CleanUpList(startingCoordinates);
             CleanUpList(possibleHitCoordinates);
             CleanUpList(cleanupCoordinates);
             Console.ReadLine();
 
+            int counter = 0;
             if (searchMode == SearchMode.SEARCH)
             {
                 do
                 {
+                    counter++;
+                    if (counter > 300)
+                    {
+                        Console.WriteLine("Too many iterations through Search");
+                        Console.ReadLine();
+                    }
                     // This is the strafing pattern from the article
                     if (startingCoordinates.Count > 0)
                     {
@@ -749,8 +758,19 @@ namespace BattleShip
                         }
                     }
                 }
-                Coordinate location = ChooseCoordinateFromFromList(possibleHitCoordinates);
-                hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
+
+                Coordinate location;
+                do
+                {
+                    counter++;
+                    if (counter > 300)
+                    {
+                        Console.WriteLine("Too many iterations through Search");
+                        Console.ReadLine();
+                    }
+                    location = ChooseCoordinateFromFromList(possibleHitCoordinates);
+                    hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
+                } while (hitStatus == HitStatus.RETRY);
 
                 if (hitStatus == HitStatus.HIT)
                 {
@@ -809,8 +829,18 @@ namespace BattleShip
                     }
                 }
 
-                Coordinate location = ChooseCoordinateFromFromList(possibleHitCoordinates);
-                hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
+                Coordinate location;
+                do
+                {
+                    counter++;
+                    if (counter > 300)
+                    {
+                        Console.WriteLine("Too many iterations through Search");
+                        Console.ReadLine();
+                    }
+                    location = ChooseCoordinateFromFromList(possibleHitCoordinates);
+                    hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
+                } while (hitStatus == HitStatus.RETRY);
 
                 if (hitStatus == HitStatus.HIT)
                 {
@@ -831,11 +861,12 @@ namespace BattleShip
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
                     currentShip = sunkShip;
-                    currentShipCoordinates.Clear();
 
                     // There are more hits than should be needed to sink a ship.
                     if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() || !sunkShip.AreCoordinatesAligned())
                     {
+                        ReMarkBoardOnDestroyedShip();
+                        currentShipCoordinates.Clear();
                         GenerateHeatMap();
                         searchMode = SearchMode.HUNT;
                         AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
@@ -843,13 +874,12 @@ namespace BattleShip
                     else
                     {
                         // clearing out the lists
+                        ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
-                        currentShipCoordinates.Clear(); // redundant
+                        currentShipCoordinates.Clear();
                         RemoveDestroyedShip();
                         searchMode = SearchMode.SEARCH;
                     }
-
-                    ReMarkBoardOnDestroyedShip();
                 }
             }
 
@@ -1069,6 +1099,10 @@ namespace BattleShip
             }
         }
 
+        /// <summary>
+        /// This removes all elements from the list that are less than or equal to zero
+        /// </summary>
+        /// <param name="coordinates">The list to be cleaned up</param>
         void CleanUpList(List<Coordinate> coordinates)
         {
             List<Coordinate> tempList = new List<Coordinate>();
