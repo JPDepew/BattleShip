@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BattleShip
+﻿namespace BattleShip
 {
     enum HitStatus { HIT, MISS, RETRY, SUNK };
     enum SearchMode { SEARCH, HUNT, NARROWEDHUNT }

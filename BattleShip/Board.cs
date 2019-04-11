@@ -536,28 +536,6 @@ namespace BattleShip
                         orientation = Console.ReadLine();
                     } while (orientation != "d" && orientation != "r");
 
-                    // Checking to make sure ship doesn't go off side
-                    //if (orientation == "d")
-                    //{
-                    //    if (shipLengths[shipIndex] + y > board.GetLength(0))
-                    //    {
-                    //        Console.WriteLine("Ship goes off edge. Press enter to try again.");
-                    //        Console.ReadKey();
-                    //        Console.Clear();
-                    //        continue;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (shipLengths[shipIndex] + x > board.GetLength(1))
-                    //    {
-                    //        Console.WriteLine("Ship goes off edge. Press enter to try again.");
-                    //        Console.ReadKey();
-                    //        Console.Clear();
-                    //        continue;
-                    //    }
-                    //}
-
                     if (!VerifyShipPlacement(x, y, orientation, shipIndex))
                     {
                         Console.WriteLine("Error in ship placement. Press enter to try again.");
@@ -582,6 +560,14 @@ namespace BattleShip
 
         bool VerifyShipPlacement(int x, int y, string orientation, int shipIndex)
         {
+            if(x > board.GetLength(1) || x < 0)
+            {
+                return false;
+            }
+            if(y > board.GetLength(0) || y < 0)
+            {
+                return false;
+            }
             if (orientation == "d")
             {
                 if (shipLengths[shipIndex] + y > board.GetLength(0))
@@ -720,18 +706,18 @@ namespace BattleShip
                         xPos = coordinate.x;
                         yPos = coordinate.y;
                     }
-                    else
+                    else // includes only odds/evens
                     {
                         yPos = rnd.Next(0, 10);
                         xPos = rnd.Next(0, 10);
-                        //if (yPos % 2 == 0) // odd numbers
-                        //{
-                        //    xPos = rnd.Next(0, 5) * 2 + 1;
-                        //}
-                        //else // even numbers
-                        //{
-                        //    xPos = rnd.Next(0, 5) * 2;
-                        //}
+                        if (yPos % 2 == 0) // odd numbers
+                        {
+                            xPos = rnd.Next(0, 5) * 2 + 1;
+                        }
+                        else // even numbers
+                        {
+                            xPos = rnd.Next(0, 5) * 2;
+                        }
                     }
 
                     hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
@@ -1058,6 +1044,7 @@ namespace BattleShip
                         Console.WriteLine("Game Over, " + name + " wins!");
                         BinaryFormatter bf = new BinaryFormatter();
 
+                        // Check for file existing
                         using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
                             freqTable = (int[,])bf.Deserialize(fs);
 
