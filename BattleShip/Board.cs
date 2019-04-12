@@ -1069,8 +1069,11 @@ namespace BattleShip
                         Console.WriteLine("Game Over, " + name + " wins!");
                         BinaryFormatter bf = new BinaryFormatter();
 
-                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
-                            freqTable = (int[,])bf.Deserialize(fs);
+                        if (File.Exists("freq.tbl"))
+                        {
+                            using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
+                                freqTable = (int[,])bf.Deserialize(fs);
+                        }
 
                         // Create frequency map of hits
                         for (int i = 0; i < board.GetLength(0); i++)
@@ -1105,8 +1108,11 @@ namespace BattleShip
                         BinaryFormatter bf = new BinaryFormatter();
 
                         // Check for file existing
-                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
-                            freqTable = (int[,])bf.Deserialize(fs);
+                        if (File.Exists("freq.tbl"))
+                        {
+                            using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
+                                freqTable = (int[,])bf.Deserialize(fs);
+                        }
 
                         // Create frequency map of hits
                         for (int i = 0; i < board.GetLength(0); i++)
