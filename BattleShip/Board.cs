@@ -56,6 +56,7 @@ namespace BattleShip
         private List<Ship> sunkShips;
         private Ship currentShip;
         float[,] heatMap;
+        private bool hitFiveCoordinates = false;
         Random rnd;
 
         string[,] board;
@@ -744,14 +745,22 @@ namespace BattleShip
                 {
                     Coordinate coordinate = new Coordinate(xPos, yPos);
 
-                    if (foundShipCoordinates.Count + 1 >= 5)
+                    if (hitFiveCoordinates)
                     {
+                        searchMode = SearchMode.HUNT;
+                        currentHitCoordinate = new Coordinate(xPos, yPos);
+                        AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
+                        currentShipCoordinates.Add(currentHitCoordinate);
+                    }
+                    else if (foundShipCoordinates.Count + 1 >= 5)
+                    {
+                        hitFiveCoordinates = true;
                         searchMode = SearchMode.HUNT;
                         currentHitCoordinate = new Coordinate(xPos, yPos);
                         currentShipCoordinates.Add(currentHitCoordinate);
                         AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
                     }
-                    // the we're going to keep searching, so just add this to foundShipCoordinates
+                    // then we're going to keep searching, so just add this to foundShipCoordinates
                     else
                     {
                         foundShipCoordinates.Add(coordinate);
@@ -798,17 +807,16 @@ namespace BattleShip
                 {
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
-                    // if there is a neighbor of any object in currentShipCoordinates in foundShipCoordinates,
-                    // add that neighbor to currentShipCoordinates
+                    AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
 
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
                     currentShip = sunkShip;
-                    currentShipCoordinates.Clear();
 
                     // There are more hits than should be needed to sink a ship.
                     if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() || !sunkShip.AreCoordinatesAligned())
                     {
+                        ReMarkBoardOnDestroyedShip();
                         GenerateHeatMap();
                         searchMode = SearchMode.HUNT;
                         AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
@@ -816,6 +824,7 @@ namespace BattleShip
                     else
                     {
                         // clearing out the lists
+                        ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
                         currentShipCoordinates.Clear();
                         RemoveDestroyedShip();
@@ -834,7 +843,6 @@ namespace BattleShip
                             searchMode = SearchMode.HUNT;
                         }
                     }
-                    ReMarkBoardOnDestroyedShip();
                 }
             }
             else if (searchMode == SearchMode.NARROWEDHUNT)
@@ -886,8 +894,7 @@ namespace BattleShip
                     // it would search both spots to see what it missed.
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
-                    // if there is a neighbor of any object in currentShipCoordinates in foundShipCoordinates,
-                    // add that neighbor to currentShipCoordinates
+                    AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
 
                     Console.WriteLine("Length: " + currentShipCoordinates.Count);
                     Console.ReadKey();
@@ -1272,6 +1279,42 @@ namespace BattleShip
             }
         }
 
+        /// if there is a neighbor of any object in currentShipCoordinates in foundShipCoordinates,
+        /// add that neighbor to currentShipCoordinates
+        private void AddNeighboringFoundCoordinatesToCurrentHitCoordinates()
+        {
+            List<Coordinate> coordinatesToAdd = new List<Coordinate>();
+
+            foreach (Coordinate cs in currentShipCoordinates)
+            {
+                foreach (Coordinate cf in foundShipCoordinates)
+                {
+                    if (cs.CoordinateIsNeighbor(cf))
+                    {
+                        coordinatesToAdd.Add(cf);
+                    }
+                }
+            }
+
+            foreach (Coordinate c in coordinatesToAdd)
+            {
+                currentShipCoordinates.Add(c);
+                foundShipCoordinates.Remove(c);
+            }
+        }
+
+        private bool ListContainsCoordinate(List<Coordinate> coordinates, Coordinate coordinate)
+        {
+            foreach(Coordinate c in coordinates)
+            {
+                if(c.x == coordinate.x && c.y == coordinate.y)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         void AddSurroundingPossibleHitCoordinates(Coordinate hitCoordinates)
         {
             Coordinate coordinate = new Coordinate(hitCoordinates.x, hitCoordinates.y - 1);
@@ -1280,7 +1323,10 @@ namespace BattleShip
                 if (heatMap[coordinate.y, coordinate.x] == -1)
                 {
                     RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                    currentShipCoordinates.Add(coordinate);
+                    if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                    {
+                        currentShipCoordinates.Add(coordinate);
+                    }
                     coordinate = new Coordinate(hitCoordinates.x, hitCoordinates.y - 2);
                 }
                 if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1293,7 +1339,10 @@ namespace BattleShip
                 if (heatMap[coordinate.y, coordinate.x] == -1)
                 {
                     RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                    currentShipCoordinates.Add(coordinate);
+                    if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                    {
+                        currentShipCoordinates.Add(coordinate);
+                    }
                     coordinate = new Coordinate(hitCoordinates.x, hitCoordinates.y + 2);
                 }
                 if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1306,7 +1355,10 @@ namespace BattleShip
                 if (heatMap[coordinate.y, coordinate.x] == -1)
                 {
                     RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                    currentShipCoordinates.Add(coordinate);
+                    if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                    {
+                        currentShipCoordinates.Add(coordinate);
+                    }
                     coordinate = new Coordinate(hitCoordinates.x - 2, hitCoordinates.y);
                 }
                 if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1319,7 +1371,10 @@ namespace BattleShip
                 if (heatMap[coordinate.y, coordinate.x] == -1)
                 {
                     RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                    currentShipCoordinates.Add(coordinate);
+                    if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                    {
+                        currentShipCoordinates.Add(coordinate);
+                    }
                     coordinate = new Coordinate(hitCoordinates.x + 2, hitCoordinates.y);
                 }
                 if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1345,7 +1400,10 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y + 2);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1358,14 +1416,17 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1) // this checks to see if it is a hit. If it is, you should pass the hit, not ignore it
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y - 2);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
                     }
                 }
-                else
+                else // currentHitCoordinate.y < newHitCoordinate.y
                 {
                     Coordinate coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y - 1);
 
@@ -1374,7 +1435,10 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(currentHitCoordinate.x, currentHitCoordinate.y - 2);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1388,7 +1452,10 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(newHitCoordinate.x, newHitCoordinate.y + 2);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1408,7 +1475,10 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(currentHitCoordinate.x + 2, currentHitCoordinate.y);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1422,7 +1492,10 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(newHitCoordinate.x - 2, newHitCoordinate.y);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1437,7 +1510,10 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(currentHitCoordinate.x - 2, currentHitCoordinate.y);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
@@ -1450,7 +1526,10 @@ namespace BattleShip
                         if (heatMap[coordinate.y, coordinate.x] == -1)
                         {
                             RemoveCoordinateFromList(foundShipCoordinates, coordinate);
-                            currentShipCoordinates.Add(coordinate);
+                            if (!ListContainsCoordinate(currentShipCoordinates, coordinate))
+                            {
+                                currentShipCoordinates.Add(coordinate);
+                            }
                             coordinate = new Coordinate(newHitCoordinate.x + 2, newHitCoordinate.y);
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
