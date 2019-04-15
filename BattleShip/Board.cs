@@ -450,22 +450,31 @@ namespace BattleShip
                 }
                 catch
                 {
-                    Console.Write("No previous board available");
+                    Console.WriteLine("No previous board available");
                 }
 
+                List<Coordinate> placedShips = new List<Coordinate>();
 
                 while (ind < shipLengths.GetLength(0))
                 {
                     int x;
                     int y;
+                    Coordinate shipToPlace;
+
+                    //Coordinate placedShip = new Coordinate(minRow, minCol);
 
                     Random rand = new Random();
-                    y = rand.Next(0, board.GetLength(0));
-                    x = rand.Next(0, board.GetLength(1));
+                    //y = rand.Next(0, board.GetLength(0));
+                    //x = rand.Next(0, board.GetLength(1));
 
-                    int chance = rand.Next(0, 10);
+                    shipToPlace = getMinPlacementVal(freqTable, placedShips);
+
+                    x = shipToPlace.x;
+                    y = shipToPlace.y;
+
+                    int chance = rand.Next(0, 9);
                     string orientation;
-                    if (chance >= 5)
+                    if (chance > 4)
                     {
                         orientation = "d";
                     }
@@ -501,6 +510,7 @@ namespace BattleShip
                     Console.Clear();
                     ind++;
                 }
+                PrintBoard();
             }
             else
             {
@@ -556,6 +566,47 @@ namespace BattleShip
                 Console.ReadKey();
                 Console.Clear();
             }
+        }
+
+        bool checkCoordinates(Coordinate c, List<Coordinate> placedShips)
+        {
+            foreach (Coordinate coord in placedShips)
+            {
+                if (c.CoordinatesAreEqual(coord))
+                {
+                    return false;
+                }
+            }
+           
+            return true;
+        }
+
+    //  Find lowest value position in frequency table, and try to place ship at location.  If it doesn't work, keep trying until a coordinate is found that does
+    Coordinate getMinPlacementVal(int[,] freqTable, List<Coordinate> placedShips)
+        {
+            int minValue = int.MaxValue;
+            int minCol = -1;
+            int minRow = -1;
+
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    if ((freqTable[i, j] < minValue) && (checkCoordinates(new Coordinate(i, j), placedShips)))
+                    {
+                        minValue = freqTable[i, j];
+                        minRow = i;
+                        minCol = j;
+                        //Coordinate placedShip = new Coordinate(minRow, minCol);
+                        
+                        Console.WriteLine(i + " " + j);
+                    }
+                }
+                placedShips.Add(new Coordinate(minRow, minCol));
+                return new Coordinate(minRow, minCol);
+            }
+
+            return new Coordinate(0, 0);
         }
 
         bool VerifyShipPlacement(int x, int y, string orientation, int shipIndex)
