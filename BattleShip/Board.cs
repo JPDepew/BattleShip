@@ -70,6 +70,7 @@ namespace BattleShip
         int boardSize = 10;
         int hits;
         int maxHits = 0;
+        int turnCounter = 0;
 
         public Board(string _name)
         {
@@ -214,6 +215,7 @@ namespace BattleShip
                 else if (enemyView[y, _x] == "[S]")
                 {
                     nextToHit = true;
+                    // add value here?
                     //sum -= subtractValue;
                     break;
                 }
@@ -691,6 +693,8 @@ namespace BattleShip
             int xPos = 0;
             HitStatus hitStatus;
 
+            turnCounter++;
+
             GenerateHeatMap();
             PrintHeatMap();
             PrintEnemyView();
@@ -714,9 +718,18 @@ namespace BattleShip
                     // This is the strafing pattern from the article
                     if (startingCoordinates.Count > 0)
                     {
-                        Coordinate coordinate = ChooseCoordinateFromFromList(startingCoordinates);
-                        yPos = coordinate.y;
-                        xPos = coordinate.x;
+                        if (turnCounter % 3 == 0)
+                        {
+                            Coordinate coordinate = ChooseSideCoordinateFromList(startingCoordinates);
+                            yPos = coordinate.y;
+                            xPos = coordinate.x;
+                        }
+                        else
+                        {
+                            Coordinate coordinate = ChooseCoordinateFromFromList(startingCoordinates);
+                            yPos = coordinate.y;
+                            xPos = coordinate.x;
+                        }
                     }
                     // This is the cleanup pattern
                     else if (cleanupCoordinates.Count > 0)
@@ -729,14 +742,14 @@ namespace BattleShip
                     {
                         yPos = rnd.Next(0, 10);
                         xPos = rnd.Next(0, 10);
-                        if (yPos % 2 == 0) // odd numbers
-                        {
-                            xPos = rnd.Next(0, 5) * 2 + 1;
-                        }
-                        else // even numbers
-                        {
-                            xPos = rnd.Next(0, 5) * 2;
-                        }
+                        //if (yPos % 2 == 0) // odd numbers
+                        //{
+                        //    xPos = rnd.Next(0, 5) * 2 + 1;
+                        //}
+                        //else // even numbers
+                        //{
+                        //    xPos = rnd.Next(0, 5) * 2;
+                        //}
                     }
 
                     hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
@@ -1241,6 +1254,38 @@ namespace BattleShip
         }
 
         /// <summary>
+        /// Chooses a coordinate that is on the side of the board.
+        /// </summary>
+        /// <param name="coordinates"></param>
+        /// <returns></returns>
+        Coordinate ChooseSideCoordinateFromList(List<Coordinate> coordinates)
+        {
+            Coordinate sideCoordinate = new Coordinate(0, 0);
+            bool found = false;
+
+            foreach (Coordinate c in coordinates)
+            {
+                if (c.y == 9 || c.y == 0 || c.x == 9 || c.x == 0)
+                {
+                    sideCoordinate = c;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found)
+            {
+                coordinates.Remove(sideCoordinate);
+            }
+            else
+            {
+                sideCoordinate = ChooseCoordinateFromFromList(coordinates);
+            }
+
+            return sideCoordinate;
+        }
+
+        /// <summary>
         /// Gives you the highest coordinate to choose from and then removes it from the list (possibleHitCoordinates)
         /// </summary>
         /// <returns></returns>
@@ -1305,9 +1350,9 @@ namespace BattleShip
 
         private bool ListContainsCoordinate(List<Coordinate> coordinates, Coordinate coordinate)
         {
-            foreach(Coordinate c in coordinates)
+            foreach (Coordinate c in coordinates)
             {
-                if(c.x == coordinate.x && c.y == coordinate.y)
+                if (c.x == coordinate.x && c.y == coordinate.y)
                 {
                     return true;
                 }
