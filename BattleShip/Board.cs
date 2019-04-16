@@ -598,12 +598,12 @@ namespace BattleShip
                     return false;
                 }
             }
-           
+
             return true;
         }
 
-    //  Find lowest value position in frequency table, and try to place ship at location.  If it doesn't work, keep trying until a coordinate is found that does
-    Coordinate getMinPlacementVal(int[,] freqTable, List<Coordinate> placedShips)
+        //  Find lowest value position in frequency table, and try to place ship at location.  If it doesn't work, keep trying until a coordinate is found that does
+        Coordinate getMinPlacementVal(int[,] freqTable, List<Coordinate> placedShips)
         {
             int minValue = int.MaxValue;
             int minCol = -1;
@@ -619,7 +619,7 @@ namespace BattleShip
                         minRow = i;
                         minCol = j;
                         //Coordinate placedShip = new Coordinate(minRow, minCol);
-                        
+
                         Console.WriteLine(i + " " + j);
                     }
                 }
@@ -963,6 +963,8 @@ namespace BattleShip
                     Console.WriteLine("Length: " + currentShipCoordinates.Count);
                     Console.ReadKey();
 
+                    // we need to take into account that foundShipCoordinates will more likely have a ship than the other stuff maybe...
+
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
                     currentShip = sunkShip;
@@ -1000,7 +1002,16 @@ namespace BattleShip
                 }
             }
 
-            return false;
+            if (enemyBoard.GetHits() >= enemyBoard.GetMaxHits())
+            {
+                Console.WriteLine("Game Over, " + name + " wins!");
+                Console.ReadLine();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
