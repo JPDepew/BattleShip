@@ -913,7 +913,7 @@ namespace BattleShip
                         ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
                         currentShipCoordinates.Clear();
-                        RemoveDestroyedShip();
+                        //RemoveDestroyedShip();
                         // got back to hunt with next coordinate from foundShipCoordinates
 
                         if (foundShipCoordinates.Count <= 0)
@@ -962,7 +962,33 @@ namespace BattleShip
                         Console.WriteLine("Too many iterations through Search");
                         Console.ReadLine();
                     }
-                    location = ChooseCoordinateFromFromList(possibleHitCoordinates);
+
+                    // This check is for the edge-case where there are no coordinates in possibleHitCoordinates even when 
+                    // all the surrounding coordinates have been attempted to be added.
+                    if (possibleHitCoordinates.Count > 0)
+                    {
+                        location = ChooseCoordinateFromFromList(possibleHitCoordinates);
+                    }
+                    else
+                    {
+                        // we'll just have to search. this sucks
+                        if (startingCoordinates.Count > 0)
+                        {
+                            location = ChooseCoordinateFromFromList(startingCoordinates);
+                        }
+                        else if (cleanupCoordinates.Count > 0)
+                        {
+                            location = ChooseCoordinateFromFromList(cleanupCoordinates);
+                        }
+                        else
+                        {
+                            int y = rnd.Next(0, 10);
+                            int x = rnd.Next(0, 10);
+                            location = new Coordinate(x, y);
+                        }
+                        searchMode = SearchMode.SEARCH;
+                    }
+
                     hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
                 } while (hitStatus == HitStatus.RETRY);
 
@@ -980,19 +1006,21 @@ namespace BattleShip
                     // it would search both spots to see what it missed.
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
+                    int tempCount = currentShipCoordinates.Count;
+
                     AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
 
                     Console.WriteLine("Length: " + currentShipCoordinates.Count);
                     Console.ReadKey();
-
-                    // we need to take into account that foundShipCoordinates will more likely have a ship than the other stuff maybe...
 
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
                     currentShip = sunkShip;
 
                     // There are more hits than should be needed to sink a ship.
-                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() || !sunkShip.AreCoordinatesAligned())
+                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() 
+                        || !sunkShip.AreCoordinatesAligned()                                    // This checks if the coordinates are aligned
+                        || tempCount != currentShipCoordinates.Count)                           // This checks if there were any foundShipCoordinates surrounding the ship
                     {
                         ReMarkBoardOnDestroyedShip();
                         currentShipCoordinates.Clear();
@@ -1006,7 +1034,7 @@ namespace BattleShip
                         ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
                         currentShipCoordinates.Clear();
-                        RemoveDestroyedShip();
+                        //RemoveDestroyedShip();
                         // got back to hunt with next coordinate from foundShipCoordinates
                         if (foundShipCoordinates.Count <= 0)
                         {
