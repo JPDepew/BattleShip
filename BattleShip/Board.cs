@@ -894,9 +894,11 @@ namespace BattleShip
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
                     AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
+                    RemoveDestroyedShip();
 
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
+                    sunkShips.Add(sunkShip);
                     currentShip = sunkShip;
 
                     // There are more hits than should be needed to sink a ship.
@@ -913,7 +915,7 @@ namespace BattleShip
                         ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
                         currentShipCoordinates.Clear();
-                        //RemoveDestroyedShip();
+
                         // got back to hunt with next coordinate from foundShipCoordinates
 
                         if (foundShipCoordinates.Count <= 0)
@@ -1006,21 +1008,20 @@ namespace BattleShip
                     // it would search both spots to see what it missed.
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
-                    int tempCount = currentShipCoordinates.Count;
-
                     AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
+                    RemoveDestroyedShip();
 
                     Console.WriteLine("Length: " + currentShipCoordinates.Count);
                     Console.ReadKey();
 
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
+                    sunkShips.Add(sunkShip);
                     currentShip = sunkShip;
 
                     // There are more hits than should be needed to sink a ship.
-                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() 
-                        || !sunkShip.AreCoordinatesAligned()                                    // This checks if the coordinates are aligned
-                        || tempCount != currentShipCoordinates.Count)                           // This checks if there were any foundShipCoordinates surrounding the ship
+                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength()
+                        || !sunkShip.AreCoordinatesAligned())                           // This checks if the coordinates are aligned
                     {
                         ReMarkBoardOnDestroyedShip();
                         currentShipCoordinates.Clear();
@@ -1034,7 +1035,7 @@ namespace BattleShip
                         ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
                         currentShipCoordinates.Clear();
-                        //RemoveDestroyedShip();
+
                         // got back to hunt with next coordinate from foundShipCoordinates
                         if (foundShipCoordinates.Count <= 0)
                         {

@@ -44,5 +44,44 @@ namespace BattleShip
 
             return true;
         }
+
+        //public Coordinate GetMisalignedCoordinates()
+        //{
+        //    List<Coordinate> tempCoordinates = new List<Coordinate>();
+        //    int ys = 0;
+        //    int xs = 0;
+
+        //    for (int i = 0; i < coordinates.Count; i++)
+        //    {
+        //        for (int j = 0; j < coordinates.Count; j++)
+        //        {
+        //            if (coordinates[i].x == coordinates[j].x)
+        //            {
+        //                xs++;
+        //            }
+        //            else if(coordinates[i].y == coordinates[j].y)
+        //            {
+        //                ys++;
+        //            }
+        //        }
+        //    }
+
+        //    for (int i = 0; i < coordinates.Count; i++)
+        //    {
+        //        for (int j = 0; j < coordinates.Count; j++)
+        //        {
+        //            // it is a vertical ship
+        //            if (xs > ys)
+        //            {
+                        
+        //            }
+        //            // it is a horizontal ship
+        //            else
+        //            {
+                        
+        //            }
+        //        }
+        //    }
+        //}
     }
 }
