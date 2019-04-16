@@ -855,7 +855,29 @@ namespace BattleShip
                         Console.WriteLine("Too many iterations through Search");
                         Console.ReadLine();
                     }
-                    location = ChooseCoordinateFromFromList(possibleHitCoordinates);
+                    if (possibleHitCoordinates.Count > 0)
+                    {
+                        location = ChooseCoordinateFromFromList(possibleHitCoordinates);
+                    }
+                    else
+                    {
+                        // we'll just have to search. this sucks
+                        if (startingCoordinates.Count > 0)
+                        {
+                            location = ChooseCoordinateFromFromList(startingCoordinates);
+                        }
+                        else if (cleanupCoordinates.Count > 0)
+                        {
+                            location = ChooseCoordinateFromFromList(cleanupCoordinates);
+                        }
+                        else
+                        {
+                            int y = rnd.Next(0, 10);
+                            int x = rnd.Next(0, 10);
+                            location = new Coordinate(x, y);
+                        }
+                        searchMode = SearchMode.SEARCH;
+                    }
                     hitStatus = MoveOnBoard(enemyBoard, location.x, location.y);
                 } while (hitStatus == HitStatus.RETRY);
 
