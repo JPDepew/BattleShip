@@ -180,8 +180,8 @@ namespace BattleShip
             float bonus = 0.01f;
             int totalVerticalSpaces = -1;
             int totalHorizontalSpaces = -1;
-            int maxShipLength = GetLargestRemainingShipLength();
-            int minShipLength = GetSmallestRemainingShipLength();
+            int maxShipLength = 5; //GetLargestRemainingShipLength(); // as much as I hate to comment out this stuff, it causes problems with clustering ships.
+            int minShipLength = 2; //GetSmallestRemainingShipLength();
 
             bool nextToHit = false;
 
@@ -198,8 +198,7 @@ namespace BattleShip
                 return 0;
             }
 
-            for (
-                int _x = x, counter = 0; _x < enemyView.GetLength(1) && counter < maxShipLength; _x++, counter++)
+            for (int _x = x, counter = 0; _x < enemyView.GetLength(1) && counter < maxShipLength; _x++, counter++)
             {
                 if (enemyView[y, _x] == "[X]")
                 {
@@ -805,6 +804,7 @@ namespace BattleShip
 
                     hitStatus = MoveOnBoard(enemyBoard, xPos, yPos);
                 } while (hitStatus == HitStatus.RETRY);
+
                 if (hitStatus == HitStatus.HIT) // if it hit, add the coordinates to a tuple
                 {
                     Coordinate coordinate = new Coordinate(xPos, yPos);
@@ -829,6 +829,10 @@ namespace BattleShip
                     {
                         foundShipCoordinates.Add(coordinate);
                     }
+                }
+                else if (hitStatus == HitStatus.SUNK)
+                {
+
                 }
             }
             else if (searchMode == SearchMode.HUNT)
@@ -894,7 +898,6 @@ namespace BattleShip
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
                     AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
-                    RemoveDestroyedShip();
 
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
@@ -904,6 +907,7 @@ namespace BattleShip
                     // There are more hits than should be needed to sink a ship.
                     if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() || !sunkShip.AreCoordinatesAligned())
                     {
+                        RemoveDestroyedShip();
                         ReMarkBoardOnDestroyedShip();
                         GenerateHeatMap();
                         searchMode = SearchMode.HUNT;
@@ -912,6 +916,7 @@ namespace BattleShip
                     else
                     {
                         // clearing out the lists
+                        RemoveDestroyedShip();
                         ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
                         currentShipCoordinates.Clear();
@@ -1009,7 +1014,6 @@ namespace BattleShip
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
 
                     AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
-                    RemoveDestroyedShip();
 
                     Console.WriteLine("Length: " + currentShipCoordinates.Count);
                     Console.ReadKey();
@@ -1023,6 +1027,7 @@ namespace BattleShip
                     if (sunkShip.coordinates.Count > GetLargestRemainingShipLength()
                         || !sunkShip.AreCoordinatesAligned())                           // This checks if the coordinates are aligned
                     {
+                        RemoveDestroyedShip();
                         ReMarkBoardOnDestroyedShip();
                         currentShipCoordinates.Clear();
                         GenerateHeatMap();
@@ -1032,6 +1037,7 @@ namespace BattleShip
                     else
                     {
                         // clearing out the lists
+                        RemoveDestroyedShip();
                         ReMarkBoardOnDestroyedShip();
                         possibleHitCoordinates.Clear();
                         currentShipCoordinates.Clear();
