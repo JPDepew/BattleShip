@@ -37,6 +37,18 @@ namespace BattleShip
                 return false;
             }
         }
+
+        public bool CoordinateIsAligned(Coordinate c)
+        {
+            if (c.x == x || c.y == y)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 
     class Board
@@ -890,12 +902,25 @@ namespace BattleShip
                     GenerateHeatMap();
                     possibleHitCoordinates.Clear();
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
-                    AddNarrowedPossibleHitCoordinates(location);
-                    searchMode = SearchMode.NARROWEDHUNT;
 
-                    // if coordinates are still 0 - Problem is this makes it behave worse in some clustering situations. I'm not sure if we should keep it or not.
-                    // It kind of makes the AI smarter, but the dumber AI can be more thorough
-                    if(possibleHitCoordinates.Count == 0)
+                    // before adding the narrowed possible hit coordinates, I'm checking to make sure that 
+                    // location and currentHitCoordinate are aligned. 
+                    if (currentHitCoordinate.CoordinateIsAligned(location))
+                    {
+                        AddNarrowedPossibleHitCoordinates(location);
+                        searchMode = SearchMode.NARROWEDHUNT;
+                    }
+                    // If they're not aligned, we need to search around them.
+                    else
+                    {
+                        AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
+                        searchMode = SearchMode.HUNT;
+                    }
+
+                    // So if there were not coordinates surrounding currentHitCoordinate, check location
+                    // Problem is this makes it behave worse in some clustering situations. I'm not sure if we should keep it or not.
+                    // It kind of makes the AI smarter, but the dumber AI is more thorough
+                    if (possibleHitCoordinates.Count == 0)
                     {
                         AddSurroundingPossibleHitCoordinates(location);
                         searchMode = SearchMode.HUNT;
@@ -1038,8 +1063,7 @@ namespace BattleShip
                     currentShip = sunkShip;
 
                     // There are more hits than should be needed to sink a ship.
-                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength()
-                        || !sunkShip.AreCoordinatesAligned())                           // This checks if the coordinates are aligned
+                    if (sunkShip.coordinates.Count > GetLargestRemainingShipLength() || !sunkShip.AreCoordinatesAligned())                           // This checks if the coordinates are aligned
                     {
                         RemoveDestroyedShip();
                         ReMarkBoardOnDestroyedShip();
@@ -1047,6 +1071,10 @@ namespace BattleShip
                         GenerateHeatMap();
                         searchMode = SearchMode.HUNT;
                         AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
+                        if (possibleHitCoordinates.Count == 0)
+                        {
+                            AddSurroundingPossibleHitCoordinates(location);
+                        }
                     }
                     else
                     {
