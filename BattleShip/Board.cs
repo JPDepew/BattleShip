@@ -892,6 +892,14 @@ namespace BattleShip
                     currentShipCoordinates.Add(new Coordinate(location.x, location.y));
                     AddNarrowedPossibleHitCoordinates(location);
                     searchMode = SearchMode.NARROWEDHUNT;
+
+                    // if coordinates are still 0 - Problem is this makes it behave worse in some clustering situations. I'm not sure if we should keep it or not.
+                    // It kind of makes the AI smarter, but the dumber AI can be more thorough
+                    if(possibleHitCoordinates.Count == 0)
+                    {
+                        AddSurroundingPossibleHitCoordinates(location);
+                        searchMode = SearchMode.HUNT;
+                    }
                 }
                 else if (hitStatus == HitStatus.SUNK)
                 {
@@ -912,6 +920,12 @@ namespace BattleShip
                         GenerateHeatMap();
                         searchMode = SearchMode.HUNT;
                         AddSurroundingPossibleHitCoordinates(currentHitCoordinate);
+
+                        // if coordinates are still 0 - Problem is this makes it behave worse in some clustering situations. I'm not sure if we should keep it or not.
+                        if (possibleHitCoordinates.Count == 0)
+                        {
+                            AddSurroundingPossibleHitCoordinates(location);
+                        }
                     }
                     else
                     {
