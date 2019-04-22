@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace BattleShip
 {
@@ -9,6 +11,9 @@ namespace BattleShip
             // Creating boards
             Board Player1 = new Board("Player 1");
             Board Player2 = new Board("Player 2");
+
+            Player1.freqFile = "one.freq";
+            Player2.freqFile = "two.freq";
 
             int turn = 0;
             bool gameIsOver = false;
@@ -37,6 +42,28 @@ namespace BattleShip
 
             Console.Clear();
 
+            BinaryFormatter bf = new BinaryFormatter();
+
+            if (Player1.AI)
+            {
+                if (File.Exists(Player1.freqFile))
+                {
+                    using (FileStream fs = new FileStream(Player1.freqFile, FileMode.Open))
+                        Player1.freqTable = (int[,])bf.Deserialize(fs);
+                }
+
+            }
+
+            if (Player2.AI)
+            {
+                if (File.Exists(Player2.freqFile))
+                {
+                    using (FileStream fs = new FileStream(Player2.freqFile, FileMode.Open))
+                        Player2.freqTable = (int[,])bf.Deserialize(fs);
+                }
+
+            }
+
             Console.WriteLine("Player 1 ship set up");
             Player1.SetUpShips();
             Console.WriteLine("Player 2 ship set up");
@@ -48,7 +75,11 @@ namespace BattleShip
                 if (turn % 2 == 0)
                 {
                     gameIsOver = Player1.TakeTurn(Player2);
-                    if (gameIsOver) { break; }
+                    if (gameIsOver)
+                    {
+
+                        break;
+                    }
                 }
                 // Player 2's turn
                 else
@@ -58,6 +89,37 @@ namespace BattleShip
                 }
                 turn++;
             }
+
+            for (int i = 0; i < Player1.board.GetLength(0); i++)
+            {
+                for (int j = 0; j < Player1.board.GetLength(1); j++)
+                {
+                    if (Player1.board[i, j] != "[ ]")
+                    {
+                        Player1.freqTable[i, j] += 1;
+                    }
+                }
+            }
+
+            for (int i = 0; i < Player2.board.GetLength(0); i++)
+            {
+                for (int j = 0; j < Player2.board.GetLength(1); j++)
+                {
+                    if (Player2.board[i, j] != "[ ]")
+                    {
+                        Player2.freqTable[i, j] += 1;
+                    }
+                }
+            }
+
+            // Serialize frequency table, this will allow us to learn strong positions for AI vs AI.  Will need to change this model to adapt against players
+
+            using (FileStream fs = new FileStream(Player1.freqFile, FileMode.Create))
+                bf.Serialize(fs, Player1.freqTable);
+
+            using (FileStream fs = new FileStream(Player2.freqFile, FileMode.Create))
+                bf.Serialize(fs, Player2.freqTable);
+
             Console.Read();
         }
     }

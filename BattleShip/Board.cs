@@ -70,13 +70,14 @@ namespace BattleShip
         float[,] heatMap;
         private bool hitFiveCoordinates = false;
         Random rnd;
-
-        string[,] board;
+      
+        public string[,] board;
         string[,] enemyView;
         int[] shipLengths = { 5, 4, 3, 3, 2 };
         Ship[] ships = new Ship[5];
 
-        int[,] freqTable = new int[10, 10];
+        public int[,] freqTable = new int[10, 10];
+        public string freqFile;
 
         SearchMode searchMode;
         int boardSize = 10;
@@ -455,12 +456,29 @@ namespace BattleShip
                 int ind = 0;
 
                 // read in previous board values, this will be changing very soon (need to implement storing of frequencies also)
-                try
-                {
-                    BinaryFormatter bf = new BinaryFormatter();
 
-                    using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
-                        freqTable = (int[,])bf.Deserialize(fs);
+                //    BinaryFormatter bf = new BinaryFormatter();
+
+                //if (File.Exists(freqFile))
+                //{
+                //    using (FileStream fs = new FileStream(freqFile, FileMode.Open))
+                //        freqTable = (int[,])bf.Deserialize(fs);
+                //}
+
+                // Create frequency map of hits
+                //else
+                //{
+                //for (int i = 0; i < board.GetLength(0); i++)
+                //{
+                //    for (int j = 0; j < board.GetLength(1); j++)
+                //    {
+                        
+                //            freqTable[i, j] = 0;
+                        
+                //    }
+                //}
+
+                //}
 
                     Console.Write("  ");
                     for (int i = 0; i < board.GetLength(0); i++)
@@ -478,14 +496,12 @@ namespace BattleShip
                         Console.WriteLine();
                     }
 
-                    Console.Read();
-                }
-                catch
-                {
-                    Console.WriteLine("No previous board available");
-                }
+                    List<Coordinate> placedShips = new List<Coordinate>();
 
-                List<Coordinate> placedShips = new List<Coordinate>();
+                    getMinPlacementVal(freqTable, placedShips);
+                Console.Write(placedShips.ToString());
+                    Console.Read();
+
 
                 while (ind < shipLengths.GetLength(0))
                 {
@@ -499,7 +515,10 @@ namespace BattleShip
                     //y = rand.Next(0, board.GetLength(0));
                     //x = rand.Next(0, board.GetLength(1));
 
-                    shipToPlace = getMinPlacementVal(freqTable, placedShips);
+                    //shipToPlace = getMinPlacementVal(freqTable, placedShips);
+
+                    int randShip = rand.Next(placedShips.Count);
+                    shipToPlace = placedShips[randShip];
 
                     x = shipToPlace.x;
                     y = shipToPlace.y;
@@ -517,9 +536,26 @@ namespace BattleShip
 
                     if (!VerifyShipPlacement(x, y, orientation, ind))
                     {
+                        if (orientation == "d")
+                        {
+                            orientation = "r";
+                        }
+                        else if (orientation == "r")
+                        {
+                            orientation = "d";
+                        }
+                        if (!VerifyShipPlacement(x, y, orientation, ind))
+                        {
+                            continue;
+                        }
                         // error in ship placement
-                        continue;
+                        else
+                        {
+                            continue;
+                        }
                     }
+
+                    Console.WriteLine(placedShips.ToString());
 
                     //if (orientation == "d")
                     //{
@@ -614,31 +650,31 @@ namespace BattleShip
         }
 
         //  Find lowest value position in frequency table, and try to place ship at location.  If it doesn't work, keep trying until a coordinate is found that does
-        Coordinate getMinPlacementVal(int[,] freqTable, List<Coordinate> placedShips)
+        List<Coordinate> getMinPlacementVal(int[,] freqTable, List<Coordinate> placedShips)
         {
             int minValue = int.MaxValue;
             int minCol = -1;
             int minRow = -1;
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < board.GetLength(0); i++)
             {
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < board.GetLength(1); j++)
                 {
-                    if ((freqTable[i, j] < minValue) && (checkCoordinates(new Coordinate(i, j), placedShips)))
+                    if ((freqTable[i, j] <= minValue) && (checkCoordinates(new Coordinate(i, j), placedShips)))
                     {
                         minValue = freqTable[i, j];
                         minRow = i;
                         minCol = j;
                         //Coordinate placedShip = new Coordinate(minRow, minCol);
+                        placedShips.Add(new Coordinate(minRow, minCol));
 
                         Console.WriteLine(i + " " + j);
                     }
                 }
-                placedShips.Add(new Coordinate(minRow, minCol));
-                return new Coordinate(minRow, minCol);
+                //return new Coordinate(minRow, minCol);
             }
 
-            return new Coordinate(0, 0);
+            return placedShips;
         }
 
         bool VerifyShipPlacement(int x, int y, string orientation, int shipIndex)
@@ -1250,27 +1286,27 @@ namespace BattleShip
                         Console.WriteLine("Game Over, " + name + " wins!");
                         BinaryFormatter bf = new BinaryFormatter();
 
-                        if (File.Exists("freq.tbl"))
-                        {
-                            using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
-                                freqTable = (int[,])bf.Deserialize(fs);
-                        }
+                        //if (File.Exists(freqFile))
+                        //{
+                        //    using (FileStream fs = new FileStream(freqFile, FileMode.Open))
+                        //        freqTable = (int[,])bf.Deserialize(fs);
+                        //}
 
                         // Create frequency map of hits
-                        for (int i = 0; i < board.GetLength(0); i++)
-                        {
-                            for (int j = 0; j < board.GetLength(1); j++)
-                            {
-                                if (board[i, j] != "[ ]")
-                                {
-                                    freqTable[i, j] += 1;
-                                }
-                            }
-                        }
+                        //for (int i = 0; i < board.GetLength(0); i++)
+                        //{
+                        //    for (int j = 0; j < board.GetLength(1); j++)
+                        //    {
+                        //        if (board[i, j] != "[ ]")
+                        //        {
+                        //            freqTable[i, j] += 1;
+                        //        }
+                        //    }
+                        //}
 
                         // Serialize frequency table, this will allow us to learn strong positions for AI vs AI.  Will need to change this model to adapt against players
-                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Create))
-                            bf.Serialize(fs, freqTable);
+                        //using (FileStream fs = new FileStream(freqFile, FileMode.Create))
+                        //    bf.Serialize(fs, freqTable);
                         return true;
                     }
                 }
@@ -1289,27 +1325,27 @@ namespace BattleShip
                         BinaryFormatter bf = new BinaryFormatter();
 
                         // Check for file existing
-                        if (File.Exists("freq.tbl"))
-                        {
-                            using (FileStream fs = new FileStream("freq.tbl", FileMode.Open))
-                                freqTable = (int[,])bf.Deserialize(fs);
-                        }
+                        //if (File.Exists(freqFile))
+                        //{
+                        //    using (FileStream fs = new FileStream(freqFile, FileMode.Open))
+                        //        freqTable = (int[,])bf.Deserialize(fs);
+                        //}
 
                         // Create frequency map of hits
-                        for (int i = 0; i < board.GetLength(0); i++)
-                        {
-                            for (int j = 0; j < board.GetLength(1); j++)
-                            {
-                                if (board[i, j] != "[ ]")
-                                {
-                                    freqTable[i, j] += 1;
-                                }
-                            }
-                        }
+                        //for (int i = 0; i < board.GetLength(0); i++)
+                        //{
+                        //    for (int j = 0; j < board.GetLength(1); j++)
+                        //    {
+                        //        if (board[i, j] != "[ ]")
+                        //        {
+                        //            freqTable[i, j] += 1;
+                        //        }
+                        //    }
+                        //}
 
-                        // Serialize frequency table, this will allow us to learn strong positions for AI vs AI.  Will need to change this model to adapt against players
-                        using (FileStream fs = new FileStream("freq.tbl", FileMode.Create))
-                            bf.Serialize(fs, freqTable);
+                        //// Serialize frequency table, this will allow us to learn strong positions for AI vs AI.  Will need to change this model to adapt against players
+                        //using (FileStream fs = new FileStream(freqFile, FileMode.Create))
+                        //    bf.Serialize(fs, freqTable);
                         return true;
                     }
                 }
