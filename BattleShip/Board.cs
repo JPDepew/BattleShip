@@ -1521,6 +1521,14 @@ namespace BattleShip
             }
         }
 
+        Coordinate ChooseRandomCoordinateFromList(List<Coordinate> coordinates)
+        {
+            int i = rnd.Next(0, coordinates.Count);
+            Coordinate coordinate = coordinates[i];
+            coordinates.Remove(coordinate);
+            return coordinate;
+        }
+
         /// if there is a neighbor of any object in currentShipCoordinates in foundShipCoordinates,
         /// add that neighbor to currentShipCoordinates
         private void AddNeighboringFoundCoordinatesToCurrentHitCoordinates()
