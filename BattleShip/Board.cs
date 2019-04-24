@@ -454,6 +454,7 @@ namespace BattleShip
             if (AI)
             {
                 int ind = 0;
+                List<Coordinate> triedShips = new List<Coordinate>();
 
                 // read in previous board values, this will be changing very soon (need to implement storing of frequencies also)
 
@@ -472,15 +473,15 @@ namespace BattleShip
                 //{
                 //    for (int j = 0; j < board.GetLength(1); j++)
                 //    {
-                        
+
                 //            freqTable[i, j] = 0;
-                        
+
                 //    }
                 //}
 
                 //}
 
-                    Console.Write("  ");
+                Console.Write("  ");
                     for (int i = 0; i < board.GetLength(0); i++)
                     {
                         Console.Write("  " + i + " ");
@@ -517,12 +518,26 @@ namespace BattleShip
 
                     //shipToPlace = getMinPlacementVal(freqTable, placedShips);
 
+                    // Chooses a random location from the list of cells with the lowest frequencies of being hit
                     int randShip = rand.Next(placedShips.Count);
                     shipToPlace = placedShips[randShip];
 
-                    x = shipToPlace.x;
-                    y = shipToPlace.y;
+                    //  This prevents an infinite loop if a ship can't be placed
+                    //  If there are less locations in the list to choose from
+                    //  than there are ships. a random location is chosen
+                    if (placedShips.Count < 5 || triedShips.Contains(shipToPlace))
+                    {
+                        Console.WriteLine("Not enough locations in list, choosing randomly");
+                        x = rand.Next(0, board.GetLength(0));
+                        y = rand.Next(0, board.GetLength(1));
+                    }
+                    else
+                    {
+                        x = shipToPlace.x;
+                        y = shipToPlace.y;
+                    }
 
+                    triedShips.Add(shipToPlace);
                     int chance = rand.Next(0, 9);
                     string orientation;
                     if (chance > 4)
@@ -534,6 +549,8 @@ namespace BattleShip
                         orientation = "r";
                     }
 
+                    // Tries to correct placement of ship if it isn't able to be placed in a cell
+                    // If it can't, continues and tries again
                     if (!VerifyShipPlacement(x, y, orientation, ind))
                     {
                         if (orientation == "d")
