@@ -458,21 +458,21 @@ namespace BattleShip
                 int ind = 0;
                 List<Coordinate> triedShips = new List<Coordinate>();
 
-                Console.Write("  ");
-                for (int i = 0; i < board.GetLength(0); i++)
-                {
-                    Console.Write("  " + i + " ");
-                }
-                Console.WriteLine();
-                for (int i = 0; i < board.GetLength(1); i++)
-                {
-                    Console.Write(i + "  ");
-                    for (int j = 0; j < board.GetLength(0); j++)
-                    {
-                        Console.Write(freqTable[i, j] + " ");
-                    }
-                    Console.WriteLine();
-                }
+                //Console.Write("  ");
+                //for (int i = 0; i < board.GetLength(0); i++)
+                //{
+                //    Console.Write("  " + i + " ");
+                //}
+                //Console.WriteLine();
+                //for (int i = 0; i < board.GetLength(1); i++)
+                //{
+                //    Console.Write(i + "  ");
+                //    for (int j = 0; j < board.GetLength(0); j++)
+                //    {
+                //        Console.Write(freqTable[i, j] + " ");
+                //    }
+                //    Console.WriteLine();
+                //}
 
                 List<Coordinate> placedShips = new List<Coordinate>();
 
@@ -497,7 +497,7 @@ namespace BattleShip
                     //  than there are ships. a random location is chosen
                     if (placedShips.Count < 5 || triedShips.Contains(shipToPlace))
                     {
-                        Console.WriteLine("Not enough locations in list, choosing randomly");
+                        //Console.WriteLine("Not enough locations in list, choosing randomly");
                         x = rand.Next(0, board.GetLength(0));
                         y = rand.Next(0, board.GetLength(1));
                     }
@@ -542,12 +542,8 @@ namespace BattleShip
                         }
                     }
 
-                    Console.WriteLine(placedShips.ToString());
-
                     // If all is well, place the ship.
                     PlaceShip(board, ind, x, y, orientation);
-
-                    Console.Clear();
                     ind++;
                 }
                 Console.WriteLine("AI board setup: ");
@@ -764,8 +760,7 @@ namespace BattleShip
             turnCounter++;
 
             GenerateHeatMap();
-            //PrintHeatMap();
-            //PrintEnemyView();
+
             // makes sure that these lists don't contain any values that are equal to 0. No need to search there in that case.
             CleanUpList(startingCoordinates);
             CleanUpList(possibleHitCoordinates);
@@ -805,7 +800,7 @@ namespace BattleShip
                         xPos = coordinate.x;
                         yPos = coordinate.y;
                     }
-                    else // includes only odds/evens
+                    else
                     {
                         possibleRemainingSpots.Clear();
                         AddPossibleRemainingSpotsToList(possibleRemainingSpots);
