@@ -65,12 +65,13 @@ namespace BattleShip
         private List<Coordinate> cleanupCoordinates;
         private List<Coordinate> foundShipCoordinates;
         private List<int> remainingShipLengths;
+        private List<Coordinate> possibleRemainingSpots;
         private List<Ship> sunkShips;
         private Ship currentShip;
         float[,] heatMap;
         private bool hitFiveCoordinates = false;
         Random rnd;
-      
+
         public string[,] board;
         string[,] enemyView;
         int[] shipLengths = { 5, 4, 3, 3, 2 };
@@ -94,6 +95,7 @@ namespace BattleShip
             startingCoordinates = new List<Coordinate>();
             cleanupCoordinates = new List<Coordinate>();
             foundShipCoordinates = new List<Coordinate>();
+            possibleRemainingSpots = new List<Coordinate>();
             searchMode = SearchMode.SEARCH;
             remainingShipLengths = new List<int>();
             sunkShips = new List<Ship>();
@@ -456,53 +458,25 @@ namespace BattleShip
                 int ind = 0;
                 List<Coordinate> triedShips = new List<Coordinate>();
 
-                // read in previous board values, this will be changing very soon (need to implement storing of frequencies also)
-
-                //    BinaryFormatter bf = new BinaryFormatter();
-
-                //if (File.Exists(freqFile))
-                //{
-                //    using (FileStream fs = new FileStream(freqFile, FileMode.Open))
-                //        freqTable = (int[,])bf.Deserialize(fs);
-                //}
-
-                // Create frequency map of hits
-                //else
-                //{
-                //for (int i = 0; i < board.GetLength(0); i++)
-                //{
-                //    for (int j = 0; j < board.GetLength(1); j++)
-                //    {
-
-                //            freqTable[i, j] = 0;
-
-                //    }
-                //}
-
-                //}
-
                 Console.Write("  ");
-                    for (int i = 0; i < board.GetLength(0); i++)
+                for (int i = 0; i < board.GetLength(0); i++)
+                {
+                    Console.Write("  " + i + " ");
+                }
+                Console.WriteLine();
+                for (int i = 0; i < board.GetLength(1); i++)
+                {
+                    Console.Write(i + "  ");
+                    for (int j = 0; j < board.GetLength(0); j++)
                     {
-                        Console.Write("  " + i + " ");
+                        Console.Write(freqTable[i, j] + " ");
                     }
                     Console.WriteLine();
-                    for (int i = 0; i < board.GetLength(1); i++)
-                    {
-                        Console.Write(i + "  ");
-                        for (int j = 0; j < board.GetLength(0); j++)
-                        {
-                            Console.Write(freqTable[i, j] + " ");
-                        }
-                        Console.WriteLine();
-                    }
+                }
 
-                    List<Coordinate> placedShips = new List<Coordinate>();
+                List<Coordinate> placedShips = new List<Coordinate>();
 
-                    getMinPlacementVal(freqTable, placedShips);
-                Console.Write(placedShips.ToString());
-                    Console.Read();
-
+                getMinPlacementVal(freqTable, placedShips);
 
                 while (ind < shipLengths.GetLength(0))
                 {
@@ -510,13 +484,9 @@ namespace BattleShip
                     int y;
                     Coordinate shipToPlace;
 
-                    //Coordinate placedShip = new Coordinate(minRow, minCol);
-
                     Random rand = new Random();
                     //y = rand.Next(0, board.GetLength(0));
                     //x = rand.Next(0, board.GetLength(1));
-
-                    //shipToPlace = getMinPlacementVal(freqTable, placedShips);
 
                     // Chooses a random location from the list of cells with the lowest frequencies of being hit
                     int randShip = rand.Next(placedShips.Count);
@@ -574,28 +544,15 @@ namespace BattleShip
 
                     Console.WriteLine(placedShips.ToString());
 
-                    //if (orientation == "d")
-                    //{
-                    //    if (shipLengths[ind] + y > board.GetLength(0))
-                    //    {
-                    //        continue;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (shipLengths[ind] + x > board.GetLength(1))
-                    //    {
-                    //        continue;
-                    //    }
-                    //}
-
                     // If all is well, place the ship.
                     PlaceShip(board, ind, x, y, orientation);
 
                     Console.Clear();
                     ind++;
                 }
+                Console.WriteLine("AI board setup: ");
                 PrintBoard();
+                Console.ReadLine();
             }
             else
             {
@@ -682,13 +639,9 @@ namespace BattleShip
                         minValue = freqTable[i, j];
                         minRow = i;
                         minCol = j;
-                        //Coordinate placedShip = new Coordinate(minRow, minCol);
                         placedShips.Add(new Coordinate(minRow, minCol));
-
-                        Console.WriteLine(i + " " + j);
                     }
                 }
-                //return new Coordinate(minRow, minCol);
             }
 
             return placedShips;
@@ -811,13 +764,12 @@ namespace BattleShip
             turnCounter++;
 
             GenerateHeatMap();
-            PrintHeatMap();
-            PrintEnemyView();
+            //PrintHeatMap();
+            //PrintEnemyView();
             // makes sure that these lists don't contain any values that are equal to 0. No need to search there in that case.
             CleanUpList(startingCoordinates);
             CleanUpList(possibleHitCoordinates);
             CleanUpList(cleanupCoordinates);
-            Console.ReadLine();
 
             int counter = 0;
             if (searchMode == SearchMode.SEARCH)
@@ -855,8 +807,21 @@ namespace BattleShip
                     }
                     else // includes only odds/evens
                     {
-                        yPos = rnd.Next(0, 10);
-                        xPos = rnd.Next(0, 10);
+                        possibleRemainingSpots.Clear();
+                        AddPossibleRemainingSpotsToList(possibleRemainingSpots);
+
+                        if (possibleRemainingSpots.Count == 0)
+                        {
+                            yPos = rnd.Next(0, 10);
+                            xPos = rnd.Next(0, 10);
+                        }
+                        else
+                        {
+                            Coordinate coordinate = ChooseCoordinateFromFromList(possibleRemainingSpots);
+                            yPos = coordinate.y;
+                            xPos = coordinate.x;
+                        }
+
                         //if (yPos % 2 == 0) // odd numbers
                         //{
                         //    xPos = rnd.Next(0, 5) * 2 + 1;
@@ -1107,9 +1072,6 @@ namespace BattleShip
 
                     AddNeighboringFoundCoordinatesToCurrentHitCoordinates();
 
-                    Console.WriteLine("Length: " + currentShipCoordinates.Count);
-                    Console.ReadKey();
-
                     Ship sunkShip = new Ship(currentShipCoordinates.Count);
                     sunkShip.AddSunkShips(currentShipCoordinates);
                     sunkShips.Add(sunkShip);
@@ -1275,10 +1237,6 @@ namespace BattleShip
             // Player makes a move
             else
             {
-                //GenerateHeatMap();
-                //PrintHeatMap();
-                //Console.ReadKey();
-
                 HitStatus hitStatus;
                 PrintPlayerView();
                 do
@@ -1801,6 +1759,20 @@ namespace BattleShip
                         }
                         if (TestCoordinates(coordinate) && heatMap[coordinate.y, coordinate.x] != -1)
                             possibleHitCoordinates.Add(coordinate);
+                    }
+                }
+            }
+        }
+
+        void AddPossibleRemainingSpotsToList(List<Coordinate> coordinates)
+        {
+            for (int i = 0; i < board.GetLength(0); i++)
+            {
+                for (int j = 0; j < board.GetLength(1); j++)
+                {
+                    if (heatMap[j, i] != 0)
+                    {
+                        coordinates.Add(new Coordinate(i, j));
                     }
                 }
             }
