@@ -74,7 +74,7 @@ namespace BattleShip
 
         public string[,] board;
         string[,] enemyView;
-        int[] shipLengths = { 5, 4, 3, 3, 2 };
+        int[] shipLengths = { 2, 3, 3, 4, 5 };
         Ship[] ships = new Ship[5];
 
         public int[,] freqTable = new int[10, 10];
@@ -564,17 +564,19 @@ namespace BattleShip
                     int y;
                     // Getting coordinates
                     Console.WriteLine("Enter coordinates for ship of length " + shipLengths[shipIndex]);
-                    Console.Write("Enter X coordinate: ");
+                    Console.Write("Enter Letter coordinate: ");
+                    do
+                    {
+                        _y = Console.ReadLine();
+                    } while (StupidSwitchLettersToNumbersFunction(_y) < 0);
+                    y = StupidSwitchLettersToNumbersFunction(_y);
+
+                    Console.Write("Enter Number coordinate: ");
                     do
                     {
                         _x = Console.ReadLine();
                     } while (!int.TryParse(_x, out x));
-
-                    Console.Write("Enter Y coordinate: ");
-                    do
-                    {
-                        _y = Console.ReadLine();
-                    } while (!int.TryParse(_y, out y));
+                    x--;
 
                     // Getting orientation
                     Console.Write("Enter d to orient the ship downwards, or r to orient the ship to the right: ");
@@ -692,7 +694,7 @@ namespace BattleShip
         /// <param name="orientation">The orientation of the ship (down or right)</param>
         void PlaceShip(string[,] playerBoard, int shipIndex, int x, int y, string orientation)
         {
-            string shipType = "[" + (ships.Length - shipIndex).ToString() + "]"; // could that 5 be changed to ships.Length?
+            string shipType = "[" + (shipIndex + 1).ToString() + "]"; // could that 5 be changed to ships.Length?
             for (int i = 0; i < shipLengths[shipIndex]; i++)
             {
                 playerBoard[y, x] = shipType;
@@ -713,12 +715,12 @@ namespace BattleShip
             Console.Write("  ");
             for (int i = 0; i < board.GetLength(0); i++)
             {
-                Console.Write("  " + i + " ");
+                Console.Write("  " + (i + 1) + " ");
             }
             Console.WriteLine();
             for (int i = 0; i < board.GetLength(1); i++)
             {
-                Console.Write(i + "  ");
+                Console.Write(StupidSwitchNumbersToLettersFunction(i) + "  ");
                 for (int j = 0; j < board.GetLength(0); j++)
                 {
                     Console.Write(board[i, j] + " ");
@@ -727,17 +729,96 @@ namespace BattleShip
             }
         }
 
+        int StupidSwitchLettersToNumbersFunction(string letter)
+        {
+            letter = letter.ToUpper();
+            int number = -100000;
+            switch (letter)
+            {
+                case "A":
+                    number = 0;
+                    break;
+                case "B":
+                    number = 1;
+                    break;
+                case "C":
+                    number = 2;
+                    break;
+                case "D":
+                    number = 3;
+                    break;
+                case "E":
+                    number = 4;
+                    break;
+                case "F":
+                    number = 5;
+                    break;
+                case "G":
+                    number = 6;
+                    break;
+                case "H":
+                    number = 7;
+                    break;
+                case "I":
+                    number = 8;
+                    break;
+                case "J":
+                    number = 9;
+                    break;
+            }
+            return number;
+        }
+
+        string StupidSwitchNumbersToLettersFunction(int number)
+        {
+            string letter = "";
+            switch (number)
+            {
+                case 0:
+                    letter = "A";
+                    break;
+                case 1:
+                    letter = "B";
+                    break;
+                case 2:
+                    letter = "C";
+                    break;
+                case 3:
+                    letter = "D";
+                    break;
+                case 4:
+                    letter = "E";
+                    break;
+                case 5:
+                    letter = "F";
+                    break;
+                case 6:
+                    letter = "G";
+                    break;
+                case 7:
+                    letter = "H";
+                    break;
+                case 8:
+                    letter = "I";
+                    break;
+                case 9:
+                    letter = "J";
+                    break;
+            }
+            return letter;
+        }
+
         public void PrintEnemyView()
         {
             Console.Write("  ");
             for (int i = 0; i < enemyView.GetLength(0); i++)
             {
-                Console.Write("  " + i + " ");
+                Console.Write("  " + (i + 1) + " ");
             }
             Console.WriteLine();
             for (int i = 0; i < enemyView.GetLength(1); i++)
             {
-                Console.Write(i + "  ");
+                Console.Write(StupidSwitchNumbersToLettersFunction(i) + "  ");
                 for (int j = 0; j < enemyView.GetLength(0); j++)
                 {
                     Console.Write(enemyView[i, j] + " ");
@@ -1132,19 +1213,19 @@ namespace BattleShip
         HitStatus PlayerMove(Board enemyBoard)
         {
             HitStatus hitStatus;
-            Console.Write("Enter X coordinate: ");
-            string str_x = Console.ReadLine();
-            Console.Write("Enter Y coordinate: ");
+            Console.Write("Enter Letter coordinate: ");
             string str_y = Console.ReadLine();
+            Console.Write("Enter Number coordinate: ");
+            string str_x = Console.ReadLine();
 
             int x;
             int y;
 
             if (!Int32.TryParse(str_x, out x))
                 return HitStatus.RETRY;
-            else if (!Int32.TryParse(str_y, out y))
-                return HitStatus.RETRY;
-
+            //else if (!Int32.TryParse(str_y, out y))
+            //    return HitStatus.RETRY;
+            y = StupidSwitchLettersToNumbersFunction(str_y);
 
             if (x > 9 || y > 9 || y < 0 || x < 0)
             {
@@ -1153,6 +1234,9 @@ namespace BattleShip
                 Console.ReadKey();
                 return HitStatus.RETRY;
             }
+
+            // x decrementing correctly
+            x--;
 
             // This tests the location to see what number it is. It just used number 1 - 5
             // to make things easier. Because of the array setup, index 0 is the ship of length 5.
@@ -1168,15 +1252,15 @@ namespace BattleShip
             switch (enemyBoard.GetLocation(x, y))
             {
                 case "[5]":
-                    ships[0].hits++;
-                    hitStatus = ships[0].hits >= ships[0].length ? HitStatus.SUNK : HitStatus.HIT;
+                    ships[4].hits++;
+                    hitStatus = ships[4].hits >= ships[4].length ? HitStatus.SUNK : HitStatus.HIT;
 
                     enemyBoard.SetLocation(x, y, "[X]");
                     enemyView[y, x] = "[X]";
                     break;
                 case "[4]":
-                    ships[1].hits++;
-                    hitStatus = ships[1].hits >= ships[1].length ? HitStatus.SUNK : HitStatus.HIT;
+                    ships[3].hits++;
+                    hitStatus = ships[3].hits >= ships[3].length ? HitStatus.SUNK : HitStatus.HIT;
 
                     enemyBoard.SetLocation(x, y, "[X]");
                     enemyView[y, x] = "[X]";
@@ -1189,15 +1273,15 @@ namespace BattleShip
                     enemyView[y, x] = "[X]";
                     break;
                 case "[2]":
-                    ships[3].hits++;
-                    hitStatus = ships[3].hits >= ships[3].length ? HitStatus.SUNK : HitStatus.HIT;
+                    ships[1].hits++;
+                    hitStatus = ships[1].hits >= ships[1].length ? HitStatus.SUNK : HitStatus.HIT;
 
                     enemyBoard.SetLocation(x, y, "[X]");
                     enemyView[y, x] = "[X]";
                     break;
                 case "[1]":
-                    ships[4].hits++;
-                    hitStatus = ships[4].hits >= ships[4].length ? HitStatus.SUNK : HitStatus.HIT;
+                    ships[0].hits++;
+                    hitStatus = ships[0].hits >= ships[0].length ? HitStatus.SUNK : HitStatus.HIT;
 
                     enemyBoard.SetLocation(x, y, "[X]");
                     enemyView[y, x] = "[X]";
